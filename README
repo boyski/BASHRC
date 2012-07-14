@@ -73,5 +73,8 @@ A secondary goal is that user A be able to source user B's
 bash-init file to pick up user B's PATH etc.
 
 The umask is a special case. Though it's not an environment
-variable, it is inherited by child processes so should be treated
-like one.
+variable, it is inherited by child processes so is much like one.
+However, since we don't want user A to get stuck with user B's
+umask when switching to user B's environment, it should be set
+in "pershell". This is redundant but since umask is not set
+additively, will cause no trouble.

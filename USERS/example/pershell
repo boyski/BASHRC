@@ -1,0 +1,9 @@
+# This file is for per-shell settings - typically for
+# interactive shells - aliases, functions, etc.
+
+umask 002
+
+PS1="\u@\h $? % "
+HISTFILESIZE=10000
+
+alias j='jobs -l'
