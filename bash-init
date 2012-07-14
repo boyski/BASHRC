@@ -1,0 +1,43 @@
+#####################################################################
+# DO NOT CHANGE THIS FILE LOCALLY! It provides only a framework
+# for finding your own bash config files at ~/.bash-topshell and
+# ~/.bash-pershell. Make your customizations there.  See the README
+# file in the same directory as this file for details.
+#####################################################################
+
+# Normally not used, but if used must not be propagated!
+unset BASH_ENV
+
+# POSIX requires this but for safety ...
+export LOGNAME=${LOGNAME:-$(logname)}
+
+export BASHRC=${BASH_SOURCE[0]%/*}
+
+[[ ! -r $BASHRC/func/pathfuncs ]] || source $BASHRC/func/pathfuncs
+
+#####################################################################
+# Exported settings belong in ~/.bash-topshell
+#####################################################################
+topshell=${BASHRC%/*}/.bash-topshell
+if [[ "$BASH_INIT_BY" != "$LOGNAME" ]]; then
+    # Use "source $BASHRC/bash-init -reset" to force an initial PATH setting
+    if [[ "$*" == *-reset* ]]; then
+	PATH=/bin:/usr/bin
+    fi
+
+    #echo "INITIALIZING ENVIRONMENT SETTINGS in $$ FROM $topshell" >&2
+    source $topshell
+fi
+unset topshell
+
+#####################################################################
+# Interactive settings belong in ~/.bash-pershell
+#####################################################################
+pershell=${BASHRC%/*}/.bash-pershell
+if [[ "$*" == *-pershell* && -f $pershell ]]; then
+    #echo "INITIALIZING INTERACTIVE SETTINGS IN $$ FROM $pershell" >&2
+    source $pershell
+fi
+unset pershell
+
+export BASH_INIT_BY=$LOGNAME

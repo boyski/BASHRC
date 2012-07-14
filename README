@@ -1,0 +1,79 @@
+#####################################################################
+# HOW TO USE
+#####################################################################
+
+This is a shared resource which may be used by multiple tools
+and users to set a "standard" environment for build or similar
+purposes. It provides minimal settings itself and tries to leave
+variables, aliases, functions, etc to the user. Essentially
+it merely translates the standard bash config-file regime to
+something more modern and useable (see below for details).
+
+Normally BASH_ENV will not and should not be set. But in the case
+where a non-interactive shell does not have an interactive shell
+as an ancestor (from crontab, for instance), it may be invoked
+with BASH_ENV=~/BASHRC/bash-init which will cause it to initialize
+just like an interactive shell.  This must be a one-time override
+so BASH_ENV is unset after use. For instance the crontab entry:
+
+    5 0 * * * BASH_ENV=~/BASHRC/bash-init <command>
+
+Will provide the same PATH etc to <command> a login shell would.
+The <command> must use a shell; you may need 'bash -c "<command>"'.
+
+Notice a subtlety - we do not look in $HOME for config files;
+instead we look in the directory containing *this* file. This
+matters when sourcing someone else's bash-init file.
+
+#####################################################################
+# THEORY OF OPERATION
+#####################################################################
+
+Bash reads *only* from ~/.bash_profile (or a couple of fallbacks
+but let's ignore them) if it's a login shell, *only* from ~/.bashrc
+if it's an interactive non-login shell, and from *neither* if
+it's neither. As a special case, a shell started by ssh will
+open ~/.bashrc. Another special case is that a file pointed to
+by $BASH_ENV is always read.
+
+Bottom line, interactive and/or ssh shells will read either
+.bash_profile or .bashrc but never both.
+
+This design is a bit archaic; it dates from the tty era when it
+could be safely assumed that every process was the descendant of
+a login shell. Thus, environment vars could be exported only in
+login shells and would be inherited everywhere.  Over the years
+this paradigm has been subverted by a few technologies such as
+rsh/ssh, cron, and X11. All of these allow a shell to be spawned
+without being the descendant of a classic login shell.
+
+Our solution is first to define the notion of a "top-level shell".
+This is the same concept as a login shell but takes account
+of the possibility that no login may actually be involved. A
+top-level shell is defined as one which is not the descendant of a
+login shell or a top-level shell. In practice we could say it's a
+typically shell whose parent process belongs to a different userid
+(often a daemon such as sshd or crond).
+
+We converge all traditional bash init logic through one file
+(this one) with 'include guards' (actually if clauses) causing
+environment variables to be set only in top-level shells. Then,
+for top level shells the "topshell" file is read and for
+interactive shells the "pershell" files is read. The net result
+is to translate the native .bash_profile/.bashrc logic into our
+own topshell/pershell logic with slightly different, and better,
+semantics.
+
+The goal is that environment variables placed in "topshell"
+will be initialized to the same values for all top-level shells
+regardless of entry method, and that child processes are free
+to modify them without interference from their own descendant
+shells. Also, interactive settings (aliases, shell functions)
+placed in "pershell" should be the same for all interactive shells.
+
+A secondary goal is that user A be able to source user B's
+bash-init file to pick up user B's PATH etc.
+
+The umask is a special case. Though it's not an environment
+variable it is inherited by child processes so it should be
+treated like an environment variable.
