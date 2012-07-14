@@ -1,18 +1,24 @@
 #!/bin/bash
 
+# This is a script to install the new bash config file design.
+# It will not destroy any data but may move ~/.bash_profile
+# and ~/.bashrc aside.
+
 now=$(date +%F)
 
 echo "This will install the 'BASHRC' config files to $HOME"
-echo "It will not destroy any files but might move .bash_profile"
-echo "to ~/.bash-pershell.$now and .bashrc to .bashrc.$now."
-echo "You might need to debug the resulting configuration."
-
-echo -n "\nDo you want to continue? [Y/n] "
+echo "It will not destroy any files but might move ~/.bash_profile"
+echo "to ~/.bash-pershell.$now and ~/.bashrc to ~/.bashrc.$now."
+echo "You may also need to debug the resulting configuration."
+echo
+echo -n "Do you want to continue? [Y/n] "
+read resp
 if [[ -n "$resp" && "$resp" != [yY]* ]]; then
     exit 0
 fi
 
 if [[ -w ~/.bash_history || ! -e ~/.bash_history ]]; then
+    echo
     echo "Unsaved, per-shell history is safer, especially for pseudo-users."
     echo -n "Do you want per-shell history? [Y/n] "
     read resp
@@ -33,9 +39,7 @@ else
 	touch $topshell
     fi
     echo 'source ~/BASHRC/bash-init -pershell' > ~/.bash_profile
-    for i in ~/.bash_login ~/.profile; do
-	echo "Warning: unused $i present, best cleaned up"
-    done
+    echo + mv ~/.bash_profile $topshell
 fi
 
 pershell=~/.bash-pershell
@@ -48,9 +52,19 @@ else
 	touch $pershell
     fi
     echo 'source ~/.bash_profile' > ~/.bashrc
+    echo + mv ~/.bashrc $pershell
 fi
 
+for i in ~/.bash_login ~/.profile; do
+    echo "Warning: unused $i present, best cleaned up"
+done
+
 cat <<EOF
-IT'S A GOOD IDEA TO TRY LOGGING IN WITH THE NEW ENVIRONMENT
-_BEFORE_ EXITING THIS SHELL!
+
+*********************************************************************
+TRY LOGGING IN WITH THE NEW ENVIRONMENT _BEFORE_ EXITING THIS SHELL!
+TO ROLL BACK:
+    % mv .bashrc.$now .bashrc
+    % mv .bash_profile.$now .bash_profile
+*********************************************************************
 EOF
