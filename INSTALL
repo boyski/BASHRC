@@ -1,0 +1,56 @@
+#!/bin/bash
+
+now=$(date +%F)
+
+echo "This will install the 'BASHRC' config files to $HOME"
+echo "It will not destroy any files but might move .bash_profile"
+echo "to ~/.bash-pershell.$now and .bashrc to .bashrc.$now."
+echo "You might need to debug the resulting configuration."
+
+echo -n "\nDo you want to continue? [Y/n] "
+if [[ -n "$resp" && "$resp" != [yY]* ]]; then
+    exit 0
+fi
+
+if [[ -w ~/.bash_history || ! -e ~/.bash_history ]]; then
+    echo "Unsaved, per-shell history is safer, especially for pseudo-users."
+    echo -n "Do you want per-shell history? [Y/n] "
+    read resp
+    if [[ -z "$resp" || "$resp" == [yY]* ]]; then
+	echo "# Using per-shell history (safer, especially for pseudo-users)" > ~/.bash_history
+	echo "# Make this file writeable to revert to default" >> ~/.bash_history
+	chmod 400 ~/.bash_history
+    fi
+fi
+
+topshell=~/.bash-topshell
+if [[ -e $topshell ]]; then
+    echo "$topshell already present"
+else
+    if [[ -e ~/.bash_profile ]]; then
+	cp -p ~/.bash_profile $topshell
+    else
+	touch $topshell
+    fi
+    echo 'source ~/BASHRC/bash-init -pershell' > ~/.bash_profile
+    for i in ~/.bash_login ~/.profile; do
+	echo "Warning: unused $i present, best cleaned up"
+    done
+fi
+
+pershell=~/.bash-pershell
+if [[ -e $pershell ]]; then
+    echo "$pershell already present"
+else
+    if [[ -e ~/.bashrc ]]; then
+	cp -p ~/.bashrc $pershell
+    else
+	touch $pershell
+    fi
+    echo 'source ~/.bash_profile' > ~/.bashrc
+fi
+
+cat <<EOF
+IT'S A GOOD IDEA TO TRY LOGGING IN WITH THE NEW ENVIRONMENT
+_BEFORE_ EXITING THIS SHELL!
+EOF

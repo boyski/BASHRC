@@ -51,18 +51,16 @@ Our solution is first to define the notion of a "top-level shell".
 This is the same concept as a login shell but takes account
 of the possibility that no login may actually be involved. A
 top-level shell is defined as one which is not the descendant of a
-login shell or a top-level shell. In practice we could say it's a
-typically shell whose parent process belongs to a different userid
+login shell or a top-level shell. In practice we could say it's
+typically a shell whose parent process belongs to a different userid
 (often a daemon such as sshd or crond).
 
-We converge all traditional bash init logic through one file
-(this one) with 'include guards' (actually if clauses) causing
-environment variables to be set only in top-level shells. Then,
-for top level shells the "topshell" file is read and for
-interactive shells the "pershell" files is read. The net result
-is to translate the native .bash_profile/.bashrc logic into our
-own topshell/pershell logic with slightly different, and better,
-semantics.
+We converge all traditional bash_profile/bashrc init logic through
+one file (this one).  For top level shells this file sources
+the "topshell" file and for interactive shells it also sources
+the "pershell" file. The net result is to translate the native
+.bash_profile/.bashrc logic into our own topshell/pershell logic
+with slightly different, and better, semantics.
 
 The goal is that environment variables placed in "topshell"
 will be initialized to the same values for all top-level shells
@@ -75,5 +73,5 @@ A secondary goal is that user A be able to source user B's
 bash-init file to pick up user B's PATH etc.
 
 The umask is a special case. Though it's not an environment
-variable it is inherited by child processes so it should be
-treated like an environment variable.
+variable, it is inherited by child processes so should be treated
+like one.
