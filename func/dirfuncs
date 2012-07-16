@@ -1,0 +1,23 @@
+#!/bin/bash (just so 'file' says the right thing)
+
+# Written by David Boyce ~1995 and placed in the public domain.
+
+# Minor enhancement to bash's builtin pushd/popd/dirs implementation.
+# This version allows you to access the first stacked directory as
+# $lwd (last working directory) and the n'th one as ${DIRSTACK[n]}.
+
+function pushd
+{
+    if [[ -n "$1" && -f $1 ]]; then
+	builtin pushd "${1%/*}"
+    else
+	builtin pushd "$@"
+    fi
+    lwd=${DIRSTACK[1]}
+}
+
+function popd
+{
+    builtin popd "$@"
+    lwd=${DIRSTACK[1]}
+}

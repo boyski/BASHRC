@@ -1,0 +1,33 @@
+#!/bin/bash (just so 'file' says the right thing)
+
+# These functions may be useful for generating prompt strings.
+
+function _ps1_dirs {
+    if [[ "${#DIRSTACK[@]}" > 1 ]]; then
+	echo -n "[$((${#DIRSTACK[@]} - 1))] "
+    fi
+    return $1 # preserve original $?
+}
+
+function _ps1_cwd {
+    if [[ "$BASH_VERSION" == [123]* ]]; then
+	typeset _trim=${PWD%/*/*/*}
+	if [[ "$_trim" == "$PWD" ]]; then
+	    typeset _dir=$PWD
+	else
+	    typeset _dir=${PWD/$_trim/...}
+	fi
+	echo -n ${_dir/$HOME/'~'}
+    else
+	: ${PROMPT_DIRTRIM:=3}
+	echo -n '\w'
+    fi
+    return $1 # preserve original $?
+}
+
+function ps1 {
+    echo -n '$(_ps1_dirs $?)\u@\h $(_ps1_cwd $?) $? \#% '
+}
+
+# Tpical usage:
+# eval PS1='$(ps1)'

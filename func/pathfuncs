@@ -1,4 +1,4 @@
-#!shell (just so 'file' says the right thing)
+#!/bin/bash (just so 'file' says the right thing)
 
 # Written by David Boyce ~1995 and placed in the public domain.
 

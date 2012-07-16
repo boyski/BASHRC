@@ -1,0 +1,18 @@
+#!/bin/bash (just so 'file' says the right thing)
+
+# This function pipes output through the preferred pager.
+# It's equivalent to "command | $PAGER"; its only benefit
+# is that it preserves the last word of the command line.
+# So if you're in the habit of using "!$" or "ESC-.", you
+# can use "pg command" instead and not lose it. E.g.
+#    % vi foo.c
+#    % pg svn diff !$
+#    % gcc -c !$
+
+function pg {
+    if tty -s; then
+	"$@" | ${PAGER:-less};
+    else
+	"$@"
+    fi
+}

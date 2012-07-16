@@ -3,7 +3,8 @@
 
 umask 002
 
-PS1="\u@\h $? % "
 HISTFILESIZE=10000
 
-alias j='jobs -l'
+# Typical prompt setting.
+source $BASHRC/func/ps1
+eval PS1='$(ps1)'
