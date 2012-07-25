@@ -9,25 +9,27 @@ function _ps1_dirs {
     return $1 # preserve original $?
 }
 
+# This is only used for bash versions < 4.0
 function _ps1_cwd {
-    if [[ "$BASH_VERSION" == [123]* ]]; then
-	typeset _trim=${PWD%/*/*/*}
-	if [[ "$_trim" == "$PWD" ]]; then
-	    typeset _dir=$PWD
-	else
-	    typeset _dir=${PWD/$_trim/...}
-	fi
-	echo -n ${_dir/$HOME/'~'}
+    typeset _trim=${PWD%/*/*/*}
+    if [[ "$_trim" == "$PWD" ]]; then
+	typeset _dir=$PWD
     else
-	: ${PROMPT_DIRTRIM:=3}
-	echo -n '\w'
+	typeset _dir=${PWD/$_trim/...}
     fi
+    echo -n ${_dir/$HOME/'~'}
     return $1 # preserve original $?
 }
 
 function ps1 {
-    echo -n '$(_ps1_dirs $?)\u@\h $(_ps1_cwd $?) $? \#% '
+    if [[ "$BASH_VERSION" == [123]* ]]; then
+	echo -n '$(_ps1_dirs $?)\u@\h $(_ps1_cwd $?) $? \#% '
+    else
+	echo -n '$(_ps1_dirs $?)\u@\h \w $? \#% '
+    fi
 }
+
+PROMPT_DIRTRIM=${PROMPT_DIRTRIM:-3}
 
 # Tpical usage:
 # eval PS1='$(ps1)'
