@@ -58,14 +58,6 @@
 
 ##########################################################################
 
-if [[ -z "$ECHO" ]]; then
-    if [[ -n "$BASH_VERSION" ]]; then
-	ECHO="echo -e"
-    else
-	ECHO="echo"
-    fi
-fi
-
 function _canonpath
 {
     typeset _var _val
@@ -89,9 +81,10 @@ function offpath
 {
     typeset entry pth_var pth_tmp new_path elem
     if [[ $# -lt 1 || ( "$1" = -* && "$1" != -[FfBb]* ) ]]; then
-	echo 1>&2 "Usage:    offpath [<path-var>] entry ..."
-	echo 1>&2 "Examples: offpath MANPATH $HOME/man /usr/local/gnu/man"
-	echo 1>&2 "          offpath /usr/local/bin"
+	exec 1>&2
+	echo "Usage:    offpath [<path-var>] entry ..."
+	echo "Examples: offpath MANPATH $HOME/man /usr/local/gnu/man"
+	echo "          offpath /usr/local/bin"
 	echo
 	echo "Removes all occurrences of each specified entry from <path-var>"
 	echo "The -F and -B flags are allowed for consistency but have no effect."
@@ -147,13 +140,14 @@ function onpath
 {
     typeset entry entries action pth_var pth_tmp mark missing
     if [[ $# -lt 1 || ( "$1" = -* && "$1" != -[FBQq]* ) ]]; then
-	echo 1>&2 "Usage:    onpath <path-var> [-Q] -[FB] entry ..."
-	echo 1>&2 "          onpath <path-var> [-Q] -[FB]marker entry ..."
-	echo 1>&2 "Examples: onpath PATH -F $HOME/bin /usr/sbin"
-	echo 1>&2 "          onpath PATH -B/usr/bin /usr/ccs/bin"
-	echo 1>&2 "          onpath PATH -Q /opt/SUNWspro/bin"
-	echo 1>&2 "          onpath MANPATH $HOME/man:/usr/local/gnu/man"
-	echo 1>&2 "          onpath ~/bin /usr/sbin"
+	exec 1>&2
+	echo "Usage:    onpath <path-var> [-Q] -[FB] entry ..."
+	echo "          onpath <path-var> [-Q] -[FB]marker entry ..."
+	echo "Examples: onpath PATH -F $HOME/bin /usr/sbin"
+	echo "          onpath PATH -B/usr/bin /usr/ccs/bin"
+	echo "          onpath PATH -Q /opt/SUNWspro/bin"
+	echo "          onpath MANPATH $HOME/man:/usr/local/gnu/man"
+	echo "          onpath ~/bin /usr/sbin"
 	echo
 	echo 'Adds directories to search paths. For each specified entry, onpath'
 	echo 'will first remove all instances of it from the specified <path-var>'
@@ -163,6 +157,8 @@ function onpath
 	echo '-F or -B flag with no intervening whitespace, e.g. -F/usr/bin,'
 	echo 'indicates that you want to place the new entry directly in front'
 	echo 'or in back of the existing entry.'
+	echo 'The -Q flag causes nonexistent entries to be silently skipped,'
+	echo 'i.e. not placed on the path.'
 	return 1
     fi
     # Assumption: path variables start with capital letters!
@@ -255,17 +251,18 @@ function pkguse
    while getopts ":HhQU" flag; do
       case $flag in
 	 ([Hh])
-	    echo 1>&2 "Usage:    pkguse [-U] [-F|-B] base ..."
-	    echo 1>&2 "Examples: pkguse /opt/rational/clearcase"
-	    echo 1>&2 "          pkguse -Q /opt/sybase"
-	    echo 1>&2 "Description:"
-	    echo 1>&2 "	  Takes the base of a package, e.g. /opt/SUNWtcx, and"
-	    echo 1>&2 "	  adds the appropriate dirs to PATH and MANPATH."
-	    echo 1>&2 "	  Use -L to add .../lib to LD_LIBRARY_PATH."
-	    echo 1>&2 "	  Warnings for nonexistent dirs are suppressed by -Q."
-	    echo 1>&2 "	  Any -F or -B flags are passed on to onpath."
+	    exec 1>&2
+	    echo "Usage:    pkguse [-U] [-F|-B] base ..."
+	    echo "Examples: pkguse /opt/rational/clearcase"
+	    echo "          pkguse -Q /opt/sybase"
+	    echo "Description:"
+	    echo "	  Takes the base of a package, e.g. /opt/SUNWtcx, and"
+	    echo "	  adds the appropriate dirs to PATH and MANPATH."
+	    echo "	  Use -L to add .../lib to LD_LIBRARY_PATH."
+	    echo "	  Warnings for nonexistent dirs are suppressed by -Q."
+	    echo "	  Any -F or -B flags are passed on to onpath."
 	    echo
-	    echo 'Takes a base directory, such as /opt/FSFgdb, and runs onpath()'
+	    echo 'Takes a base directory, such as /opt/local, and runs onpath()'
 	    echo 'multiple times to add the appropriate subdirs to PATH, MANPATH, etc.'
 	    echo 'Flags which are recognized by onpath/offpath are passed along unmodified.'
 	    return 1
@@ -325,20 +322,21 @@ function cleanpath
    while getopts "HhNTV" flag; do
       case $flag in
 	 ([Hh]|\?)
-	    echo 1>&2 "Usage: cleanpath [-NTV] [<path-var> ...]"
-	    echo 1>&2 "cleanpath -N doesn't actually change anything"
-	    echo 1>&2 "cleanpath -T also removes entries which don't exist"
-	    echo 1>&2 "cleanpath -V shows entries removed"
-	    echo 1>&2 "<path-var> defaults to PATH"
-	    echo 1>&2 "Examples: cleanpath (cleans PATH)"
-	    echo 1>&2 "          cleanpath -N (shows doubled entries in PATH)"
-	    echo 1>&2 "          cleanpath MANPATH (cleans MANPATH)"
-	    echo 1>&2 "          cleanpath -T LD_LIBRARY_PATH LD_RUN_PATH"
+	    exec 1>&2
+	    echo "Usage: cleanpath [-NTV] [<path-var> ...]"
+	    echo "cleanpath -N doesn't actually change anything"
+	    echo "cleanpath -T also removes entries which don't exist"
+	    echo "cleanpath -V shows entries removed"
+	    echo "<path-var> defaults to PATH"
+	    echo "Examples: cleanpath (cleans PATH)"
+	    echo "          cleanpath -N (shows doubled entries in PATH)"
+	    echo "          cleanpath MANPATH (cleans MANPATH)"
+	    echo "          cleanpath -T LD_LIBRARY_PATH LD_RUN_PATH"
 	    echo
 	    echo 'Removes redundant entries from a given list of path variables,'
 	    echo 'default PATH. The -T flag causes entries that do not exist'
 	    echo 'to be removed as well, and -V prints any entries removed.'
-	    echo 'The -N flag shows what it would do without doing anything.'
+	    echo 'The -N flag shows what would be done without doing anything.'
 	    return 1
 	    ;;
 	 ([N]) nmode=1 verbose=1 ;;
@@ -412,7 +410,8 @@ function listpath
 {
     typeset entry pth_var pth_tmp oldifs
     if [[ "$1" = -[Hh] ]]; then
-	echo 1>&2 "Usage: listpath [<path-var>]"
+	exec 1>&2
+	echo "Usage: listpath [<path-var>]"
 	echo
 	echo 'Prints the entries of the specified path variable (default: PATH)'
 	echo 'to stdout, one per line.'

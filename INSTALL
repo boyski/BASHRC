@@ -8,7 +8,7 @@ now=$(date +%F)
 
 echo "This will install the 'BASHRC' config files to $HOME"
 echo "It will not destroy any files but might move ~/.bash_profile"
-echo "to ~/.bash-pershell.$now and ~/.bashrc to ~/.bashrc.$now."
+echo "to ~/.bash_profile.$now and ~/.bashrc to ~/.bashrc.$now."
 echo "You may also need to debug the resulting configuration."
 echo
 echo -n "Do you want to continue? [Y/n] "
@@ -24,7 +24,7 @@ if [[ -w ~/.bash_history || ! -e ~/.bash_history ]]; then
     read resp
     if [[ -z "$resp" || "$resp" == [yY]* ]]; then
 	echo "# Using per-shell history (safer, especially for pseudo-users)" > ~/.bash_history
-	echo "# Make this file writeable to revert to default" >> ~/.bash_history
+	echo "# Make this file writeable to revert to default history behavior" >> ~/.bash_history
 	chmod 400 ~/.bash_history
     fi
 fi
@@ -34,12 +34,27 @@ if [[ -e $topshell ]]; then
     echo "$topshell already present"
 else
     if [[ -e ~/.bash_profile ]]; then
-	cp -p ~/.bash_profile $topshell
+	(
+	    set -x
+	    cp -p ~/.bash_profile ~/.bash_profile.$now
+	    cp -p ~/.bash_profile $topshell
+	)
+    elif [[ -e ~/.bash_login ]]; then
+	(
+	    set -x
+	    cp -p ~/.bash_login $topshell
+	    mv ~/.bash_login ~/.bash_login.$now
+	)
+    elif [[ -e ~/.profile ]]; then
+	(
+	    set -x
+	    cp -p ~/.profile $topshell
+	    mv ~/.profile ~/.profile.$now
+	)
     else
-	touch $topshell
+	(set -x; touch $topshell)
     fi
-    echo 'source ~/BASHRC/bash-init -pershell' > ~/.bash_profile
-    echo + mv ~/.bash_profile $topshell
+    (set -x; ln -sf BASHRC/.bash_profile .bash_profile)
 fi
 
 pershell=~/.bash-pershell
@@ -47,16 +62,19 @@ if [[ -e $pershell ]]; then
     echo "$pershell already present"
 else
     if [[ -e ~/.bashrc ]]; then
-	cp -p ~/.bashrc $pershell
+	(
+	    set -x
+	    cp -p ~/.bashrc ~/.bashrc.$now
+	    cp -p ~/.bashrc $pershell
+	)
     else
-	touch $pershell
+	(set -x; touch $pershell)
     fi
-    echo 'source ~/.bash_profile' > ~/.bashrc
-    echo + mv ~/.bashrc $pershell
+    (set -x; ln -sf BASHRC/.bash_profile .bashrc)
 fi
 
 for i in ~/.bash_login ~/.profile; do
-    echo "Warning: unused $i present, best cleaned up"
+    echo "Warning: unused $i present, best cleaned up" >&2
 done
 
 cat <<EOF
@@ -64,6 +82,7 @@ cat <<EOF
 *********************************************************************
 TRY LOGGING IN WITH THE NEW ENVIRONMENT _BEFORE_ EXITING THIS SHELL!
 TO ROLL BACK:
+    % rm -f .bashrc .bash_profile
     % mv .bashrc.$now .bashrc
     % mv .bash_profile.$now .bash_profile
 *********************************************************************
