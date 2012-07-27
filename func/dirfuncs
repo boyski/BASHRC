@@ -2,24 +2,27 @@
 
 # Written by David Boyce ~1995 and placed in the public domain.
 
-# Minor enhancement to bash's builtin pushd/popd/dirs implementation
-# with the following added features:
-# 1. This version allows you to access the first stacked directory as
-#    $lwd (last working directory) as a shortcut for ${DIRSTACK[1]}.
-# 2. It allows you to say "pushd <filename>" and will pushd to
-#    $(dirname <filename>).
+# Minor enhancements to bash's builtin pushd/popd/dirs implementation
+# including the following added features:
+#
+# 1. This version allows you to access the first stacked directory using
+#    $lwd ("last working directory") as a shorthand for ${DIRSTACK[1]}.
+# 2. It allows you to say "pushd <filename>" which will pushd to
+#    "$(dirname <filename>)".
 # 3. It will not push a dir to the stack that's already in the stack.
-#    Thus "pushd foo" is a no-op after "pushd foo".
+#    Pushing to a dir already on the stack just moves it to the top.
 
 function pushd
 {
     if [[ -n "$1" ]]; then
-	typeset _stacked _tgt=${1%/}; shift
+	typeset _tgt=${1%/} _i; shift
 	if [[ -f $_tgt ]]; then
 	    _tgt="${_tgt%/*}"
 	fi
-	for _stacked in "${DIRSTACK[@]}"; do
-	    if [[ "$_stacked" == "$_tgt" ]]; then
+	typeset -i _i=${#DIRSTACK[@]}
+	while (( $_i > 0 )); do
+	    let _i--
+	    if [[ "${DIRSTACK[$_i]}" = "$_tgt" ]]; then
 		unset _tgt
 		break
 	    fi
@@ -28,7 +31,7 @@ function pushd
 	    set -- "$_tgt" "$@"
 	    builtin pushd "$@"
 	else
-	    dirs
+	    builtin pushd +$_i
 	fi
     else
 	builtin pushd
