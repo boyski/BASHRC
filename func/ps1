@@ -4,7 +4,7 @@
 
 function _ps1_dirs {
     if [[ "${#DIRSTACK[@]}" > 1 ]]; then
-	echo -n "[$((${#DIRSTACK[@]} - 1))] "
+	echo -n "$((${#DIRSTACK[@]} - 1))+"
     fi
     return $1 # preserve original $?
 }
@@ -23,9 +23,9 @@ function _ps1_cwd {
 
 function ps1 {
     if [[ "$BASH_VERSION" == [123]* ]]; then
-	echo -n '$(_ps1_dirs $?)\u@\h $(_ps1_cwd $?) $? \#% '
+	echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) $? \#% '
     else
-	echo -n '$(_ps1_dirs $?)\u@\h \w $? \#% '
+	echo -n '\u@\h $(_ps1_dirs $?)\w $? \#% '
     fi
 }
 
