@@ -2,16 +2,36 @@
 
 # Written by David Boyce ~1995 and placed in the public domain.
 
-# Minor enhancement to bash's builtin pushd/popd/dirs implementation.
-# This version allows you to access the first stacked directory as
-# $lwd (last working directory) and the n'th one as ${DIRSTACK[n]}.
+# Minor enhancement to bash's builtin pushd/popd/dirs implementation
+# with the following added features:
+# 1. This version allows you to access the first stacked directory as
+#    $lwd (last working directory) as a shortcut for ${DIRSTACK[1]}.
+# 2. It allows you to say "pushd <filename>" and will pushd to
+#    $(dirname <filename>).
+# 3. It will not push a dir to the stack that's already in the stack.
+#    Thus "pushd foo" is a no-op after "pushd foo".
 
 function pushd
 {
-    if [[ -n "$1" && -f $1 ]]; then
-	builtin pushd "${1%/*}"
+    if [[ -n "$1" ]]; then
+	typeset _stacked _tgt=${1%/}; shift
+	if [[ -f $_tgt ]]; then
+	    _tgt="${_tgt%/*}"
+	fi
+	for _stacked in "${DIRSTACK[@]}"; do
+	    if [[ "$_stacked" == "$_tgt" ]]; then
+		unset _tgt
+		break
+	    fi
+	done
+	if [[ -n "$_tgt" ]]; then
+	    set -- "$_tgt" "$@"
+	    builtin pushd "$@"
+	else
+	    dirs
+	fi
     else
-	builtin pushd "$@"
+	builtin pushd
     fi
     lwd=${DIRSTACK[1]}
 }
