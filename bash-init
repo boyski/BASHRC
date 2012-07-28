@@ -39,15 +39,17 @@ source $BASHRC/func/pathfuncs
 if [[ "$BASH_INIT" != *$user* ]]; then
     # Use "source $BASHRC/bash-init -reset" to force an initial PATH setting
     if [[ "$*" == *-reset* ]]; then
+	echo "$0: RESETTING ENVIRONMENT FOR $user IN $$ FROM $topshell" >&2
 	unset BASH_INIT
 	PATH=/bin:/usr/bin
 	[[ ! -r /etc/profile ]] || source /etc/profile
+    elif [[ "$*" == *-debug* || "$user" != "$LOGNAME" ]]; then
+	echo "$0: INITIALIZING ENVIRONMENT FOR $user IN $$ FROM $topshell" >&2
     fi
-
-    [[ "$*" != *-debug* ]] || echo "INITIALIZING ENVIRONMENT SETTINGS in $$ FROM $topshell" >&2
     source $topshell
 
-    cleanpath PATH
+    # Remove redundant entries in these path variables.
+    cleanpath PATH MANPATH
 
     export BASH_INIT=${BASH_INIT:+$BASH_INIT:}$user
 fi
@@ -56,7 +58,9 @@ fi
 # Interactive settings belong in ~/.bash-pershell
 #####################################################################
 if [[ "$*" == *-pershell* && -f $pershell ]]; then
-    [[ "$*" != *-debug* ]] || echo "INITIALIZING INTERACTIVE SETTINGS in $$ FROM $pershell" >&2
+    if [[ "$*" == *-debug* || "$user" != "$LOGNAME" ]]; then
+	echo "$0: INITIALIZING INTERACTIVE SETTINGS FOR $user IN $$ FROM $pershell" >&2
+    fi
     source $pershell
 fi
 
