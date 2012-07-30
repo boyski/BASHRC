@@ -5,11 +5,19 @@
 # file in the same directory as this file for details.
 #####################################################################
 
-# Normally not used, but if used must not be propagated!
+# Note: we try hard to use only bash builtins here.
+
+# This is normally not set, but if set must not be propagated!
 unset BASH_ENV
 
-# Find the config files to be sourced.
+# Cygwin doesn't, or at least at one time didn't, set LOGNAME.
+export LOGNAME=${LOGNAME:-${USER:-$(logname)}}
+
+# Work out the location of the framework.
 export BASHRC=${BASH_SOURCE[0]%/*}
+[[ ! -f ${BASHRC?} ]] || BASHRC=.
+
+# Find the config files to be sourced.
 if [[ "$*" == *-user=* ]]; then
     # Source standard/versioned config files of specified user.
     for arg in "$@"; do
@@ -25,9 +33,15 @@ if [[ "$*" == *-user=* ]]; then
 	return 2
     fi
 else
-    user=${LOGNAME:-$(logname)}
-    topshell=~/.bash-topshell
-    pershell=~/.bash-pershell
+    user=${BASHRC%/*}
+    user=${user##*/}
+    eval home=~$user
+    if [[ "$home" = "~$user" ]]; then
+	user=${user:-${LOGNAME:=$(logname)}}
+	eval home=~$user
+    fi
+    topshell=$home/.bash-topshell
+    pershell=$home/.bash-pershell
 fi
 
 # These functions can be used in setting up PATH variables.
@@ -36,7 +50,7 @@ source $BASHRC/func/pathfuncs
 #####################################################################
 # Exported settings belong in ~/.bash-topshell
 #####################################################################
-if [[ "$BASH_INIT" != *$user* ]]; then
+if [[ "$BASH_INIT" != *$user* || "$*" == *-force* ]]; then
     # Use "source $BASHRC/bash-init -reset" to force an initial PATH setting
     if [[ "$*" == *-reset* ]]; then
 	echo "$0: RESETTING ENVIRONMENT FOR $user IN $$ FROM $topshell" >&2
@@ -44,7 +58,7 @@ if [[ "$BASH_INIT" != *$user* ]]; then
 	PATH=/bin:/usr/bin
 	[[ ! -r /etc/profile ]] || source /etc/profile
     elif [[ "$*" == *-debug* || "$user" != "$LOGNAME" ]]; then
-	echo "$0: INITIALIZING ENVIRONMENT FOR $user IN $$ FROM $topshell" >&2
+	echo "$0: ENVIRONMENT INITIALIZATION FOR $user IN $$ FROM $topshell" >&2
     fi
     source $topshell
 
@@ -59,9 +73,9 @@ fi
 #####################################################################
 if [[ "$*" == *-pershell* && -f $pershell ]]; then
     if [[ "$*" == *-debug* || "$user" != "$LOGNAME" ]]; then
-	echo "$0: INITIALIZING INTERACTIVE SETTINGS FOR $user IN $$ FROM $pershell" >&2
+	echo "$0: INTERACTIVE INITIALIZATION FOR $user IN $$ FROM $pershell" >&2
     fi
     source $pershell
 fi
 
-unset topshell pershell user
+unset topshell pershell user home

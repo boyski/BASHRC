@@ -1,0 +1,43 @@
+" Typically reasonable/standard vi settings:
+set autoindent
+set redraw
+set report=1
+set shell=/bin/bash
+set showmatch
+"
+" More personal preference:
+set autowrite
+set expandtab
+set nobackup nowritebackup
+set shiftwidth=4
+set shortmess+=r
+set smartindent
+set tabstop=8
+syntax off
+set nohlsearch
+"
+" Avoids a screwy "feature" added in VIM 7.
+let loaded_matchparen = 1
+"
+" Request no sounds.
+set vb t_vb=
+"
+set ff=unix
+"
+" Bind the + key to a macro which reformats the current text paragraph.
+map + {!}fmt -w 68}
+"
+" Let the user set shiftwidth to 'n' by typing '*n'.
+map *2 :set sw=2
+map *3 :set sw=3
+map *4 :set sw=4
+map *8 :set sw=8
+"
+" Bind Q to W, since the only reason I know of for hitting Q is a
+" finger fumble while trying to hit W.
+map Q W
+"
+":map <F5> V%zf
+"
+" Bind *Q to a macro which quotes the text by prepending "> ".
+"map *Q :.,$s?^?> ?
