@@ -44,3 +44,28 @@ function popd
     builtin popd "$@"
     lwd=${DIRSTACK[1]}
 }
+
+function dirs
+{
+    # Remove accidental redundancies from dir stack. This can
+    # happen via e.g. "pushd /var; pushd /var/tmp; cd ..".
+    # Bash doesn't allow us to operate on DIRSTACK directly.
+    # Requires associative arrays which are only in bash 4+.
+    if [[ "$BASH_VERSION" != [123]* ]]; then
+	typeset -A _seen
+	typeset -a _r
+	typeset _dir _i=0 _n=${#DIRSTACK[@]}
+	while [[ $_i < $_n ]]; do
+	    _dir="${DIRSTACK[$_i]}"
+	    if [[ -n "${_seen[$_dir]}" ]]; then
+		_r=($_i ${_r[@]})
+	    fi
+	    _seen[$_dir]=yes
+	    let _i=_i+1
+	done
+	for _i in "${_r[@]}"; do
+	    popd +$_i >/dev/null
+	done
+    fi
+    builtin dirs "$@"
+}
