@@ -35,10 +35,13 @@ if [[ -w ~/.bash_history || ! -e ~/.bash_history ]]; then
     echo
 fi
 
+bak=PRE-BASHRC
+
 topshell=~/.bash-topshell
 if [[ -e ~/.bash_profile ]]; then
     if [[ ! -h ~/.bash_profile && ! -e ~/.bash_profile.$now ]]; then
 	(set -x; cp -p ~/.bash_profile ~/.bash_profile.$now)
+	(set -x; cp -p ~/.bash_profile ~/.bash_profile.$bak)
     fi
     if [[ -e $topshell ]]; then
 	echo "$topshell already present" >&2
@@ -53,6 +56,7 @@ pershell=~/.bash-pershell
 if [[ -e ~/.bashrc ]]; then
     if [[ ! -h ~/.bashrc && ! -e ~/.bashrc.$now ]]; then
 	(set -x; cp -p ~/.bashrc ~/.bashrc.$now)
+	(set -x; cp -p ~/.bashrc ~/.bashrc.$bak)
     fi
     if [[ -e $pershell ]]; then
 	echo "$pershell already present" >&2
@@ -84,7 +88,7 @@ TO ROLL BACK:
     % rm -f .bashrc .bash_profile
     % mv .bashrc.$now .bashrc
     % mv .bash_profile.$now .bash_profile
-YOU MAY ALSO FIND A USE FOR SOME OF THE FUNCTIONS in $BASHRC/func.
+YOU MAY ALSO FIND A USE FOR SOME OF THE FUNCTIONS in $rcdir/func.
 
 *********************************************************************
 TRY LOGGING IN WITH THE NEW ENVIRONMENT _BEFORE_ EXITING THIS SHELL!
