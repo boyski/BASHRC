@@ -4,7 +4,7 @@
 
 function _ps1_dirs {
     if [[ "${#DIRSTACK[@]}" > 1 ]]; then
-	echo -n "$((${#DIRSTACK[@]} - 1))+"
+	echo -n "[$((${#DIRSTACK[@]} - 1))]"
     fi
     return $1 # preserve original $?
 }

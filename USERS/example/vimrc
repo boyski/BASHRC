@@ -7,7 +7,7 @@ set showmatch
 "
 " More personal preference:
 set autowrite
-set expandtab
+" set expandtab
 set nobackup nowritebackup
 set shiftwidth=4
 set shortmess+=r
