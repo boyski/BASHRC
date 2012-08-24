@@ -4,13 +4,12 @@ if [[ -n "$BASHRC" ]]; then
     # every logout, make the file empty. Otherwise "echo N > .check_freq"
     # will cause it to be updated on logout every N+1 days.
     check=$BASHRC/.check_freq
-    if [[ -f $check ]]; then
-	freq=$(<$check)
-	if [[ -z "$freq" || ( $freq != -* && -n "$(find $check -mtime +$freq)" ) ]]; then
-	    set -e -u
-	    [[ ! -d ${BASHRC?}/.svn ]] || (set -x; svn up --non-interactive $BASHRC)
-	    [[ ! -d ${BASHRC?}/.git ]] || (set -x; cd $BASHRC && git pull)
-	    echo $freq > $check
-	fi
+    days=
+    [[ ! -f $check ]] || source $check
+    if [[ -z "$days" || ( $days != -* && -n "$(find $check -mtime +$days)" ) ]]; then
+	set -e -u
+	[[ ! -d ${BASHRC?}/.svn ]] || (set -x; svn up --non-interactive $BASHRC)
+	[[ ! -d ${BASHRC?}/.git ]] || (set -x; cd $BASHRC && git pull)
+	[[ ! -f $check ]] || echo days=$days > $check
     fi
 fi
