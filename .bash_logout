@@ -7,9 +7,10 @@ if [[ -n "$BASHRC" ]]; then
     days=
     [[ ! -f $check ]] || source $check
     if [[ -z "$days" || ( $days != -* && -n "$(find $check -mtime +$days)" ) ]]; then
-	set -e -u
-	[[ ! -d ${BASHRC?}/.svn ]] || (set -x; svn up --non-interactive $BASHRC)
-	[[ ! -d ${BASHRC?}/.git ]] || (set -x; cd $BASHRC && git pull)
+	for dir in $BASHRC $bashrc_logout_update; do
+	    [[ ! -d $dir/.svn ]] || (set -ex; svn up --non-interactive $dir)
+	    [[ ! -d $dir/.git ]] || (set -ex; cd $dir && git pull)
+	done
 	[[ ! -f $check ]] || echo days=$days > $check
     fi
 fi
