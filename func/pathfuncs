@@ -139,7 +139,7 @@ function offpath
 function onpath
 {
     typeset entry entries action pth_var pth_tmp mark missing
-    if [[ $# -lt 1 || ( "$1" = -* && "$1" != -[FBQq]* ) ]]; then
+    if [[ $# -lt 1 || ( "$1" = -* && "$1" != -[FBQqRr]* ) ]]; then
 	exec 1>&2
 	echo "Usage:    onpath <path-var> [-Q] -[FB] entry ..."
 	echo "          onpath <path-var> [-Q] -[FB]marker entry ..."
@@ -156,7 +156,8 @@ function onpath
 	echo 'the <path-var>. The default is -F. Appending an entry to the'
 	echo '-F or -B flag with no intervening whitespace, e.g. -F/usr/bin,'
 	echo 'indicates that you want to place the new entry directly in front'
-	echo 'or in back of the existing entry.'
+	echo 'or in back of the existing entry. Use of -R/foo/bar will cause'
+	echo '/foo/bar to be replaced with the new entries.'
 	echo 'The -Q flag causes nonexistent entries to be silently skipped,'
 	echo 'i.e. not placed on the path.'
 	return 1
@@ -170,7 +171,7 @@ function onpath
     fi
     while [[ "$1" = -* ]]; do
 	case "$1" in
-	    (-[FB]*) action=$1 ;;
+	    (-[FfBbRr]*) action=$1 ;;
 	    (-[Qq]) missing=1 ;;
 	    (-*) echo 1>&2 "onpath: unrecognized flag $1"; return 1 ;;
 	esac
@@ -197,12 +198,18 @@ function onpath
     done
     # Now just add to front or back as requested. If -[FB] is followed
     # immediately by a directory, we try to place the entries immediately
-    # before or after that marker directory.
+    # before or after that marker directory. Similarly, if -R<replace> is
+    # used, "<replace>" is removed and replaced with the new entries.
     case "$action" in
 	(-[Ff]) pth_tmp=$entries${pth_tmp:+:$pth_tmp} ;;
 	(-[Bb]) pth_tmp=${pth_tmp:+$pth_tmp:}$entries ;;
-	(-[Ff]*) 
-	    mark=${action#-F}
+	(-[Ff]*|-[Rr]*) 
+	    case "$action" in
+		-F*) mark=${action#-F} ;;
+		-f*) mark=${action#-f} ;;
+		-R*) mark=${action#-R} ;;
+		-r*) mark=${action#-r} ;;
+	    esac
 	    pth_tmp=:$pth_tmp:
 	    if [[ "$pth_tmp" = "::" ]]; then
 		# Marker is only previous entry - just put new entries in path
@@ -212,13 +219,25 @@ function onpath
 		pth_tmp=${pth_tmp%:}
 		pth_tmp=$entries$pth_tmp
 	    else
-		pth_tmp=${pth_tmp%%:$mark:*}:$entries:$mark:${pth_tmp#*:$mark:}
-		pth_tmp=${pth_tmp#:}
-		pth_tmp=${pth_tmp%:}
+		case "$action" in
+		    (-[Ff]*) 
+			pth_tmp=${pth_tmp%%:$mark:*}:$entries:$mark:${pth_tmp#*:$mark:}
+			pth_tmp=${pth_tmp#:}
+			pth_tmp=${pth_tmp%:}
+			;;
+		    (-[Rr]*) 
+			pth_tmp=${pth_tmp%%:$mark:*}:$entries:${pth_tmp#*:$mark:}
+			pth_tmp=${pth_tmp#:}
+			pth_tmp=${pth_tmp%:}
+			;;
+	        esac
 	    fi
 	    ;;
 	(-[Bb]*) 
-	    mark=${action#-B}
+	    case "$action" in
+		-B*) mark=${action#-B} ;;
+		-b*) mark=${action#-b} ;;
+	    esac
 	    pth_tmp=:$pth_tmp:
 	    if [[ "$pth_tmp" = "::" ]]; then
 		# Marker is only previous entry - just put new entries in path
