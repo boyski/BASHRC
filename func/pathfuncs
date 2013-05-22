@@ -37,10 +37,6 @@
 # substitutions could be done much more easily and readably with the
 # newer (POSIX) substitution operator.
 
-# They are optimized for the PATH variable but will operate on
-# any variable in path format (e.g. MANPATH or LD_LIBRARY_PATH)
-# at the (minor) cost of two additional eval statements.
-
 # Note that some path variables, PATH in particular, treat the empty
 # string as a synonym for the current directory. These functions
 # do not implement that special case; thus you must specify
@@ -99,23 +95,20 @@ function offpath
     fi
     # Allow but ignore a flag here for consistency with onpath.
     [[ "$1" = -* ]] && shift
-    # Set a temp var to path value, special-casing PATH for performance.
-    case "$pth_var" in
-	(PATH) pth_tmp="$PATH" ;;
-	(*) eval pth_tmp=\$$pth_var ;;
-    esac
+    # Set a temp var to current path value.
+    eval pth_tmp=\$$pth_var
     # Disambiguate leading/trailing colons
     [[ "$pth_tmp" != :* ]] || pth_tmp=".$pth_tmp"
     [[ "$pth_tmp" != *: ]] || pth_tmp="$pth_tmp."
     # Use colon to delimit fields.
     oldifs="$IFS"
     typeset IFS=:
-    # Make sure no patterns in $* match local files
+    # Make sure no patterns in $@ match local files
     set -o noglob
     # Separate any entry-lists provided in path format.
     for elem in $pth_tmp; do
 	: ${elem:=.}
-	for entry in $*; do
+	for entry in "$@"; do
 	    _canonpath entry
 	    if [[ -a "$entry" && ! -d "$entry" && "$entry" = /* ]]; then
 		[[ "$elem" != "${entry%/*}" ]] || continue 2
@@ -128,10 +121,7 @@ function offpath
     unset oldifs
     set +o noglob
     # Now set the real variable back to the modified temp value.
-    case "$pth_var" in
-	(PATH) PATH="$new_path" ;;
-	(*) eval $pth_var="$new_path" ;;
-    esac
+    eval "$pth_var='$new_path'"
 }
 
 ##########################################################################
@@ -180,18 +170,14 @@ function onpath
     : ${action:=-F}
     # Get all instances of the specified entries out of the current path.
     offpath $pth_var "$@"
-    # Set a temp var to path value, special-casing PATH for performance.
-    case "$pth_var" in
-	(PATH) pth_tmp="$PATH" ;;
-	(*) eval pth_tmp=\$$pth_var ;;
-    esac
+    # Set a temp var to current path value.
+    eval pth_tmp=\$$pth_var
     # Collect the specified entries into a colon-separated list.
     # If entry is a full file path, assume user meant its containing dir.
-    for entry in $*; do
+    for entry in "$@"; do
 	[[ -z "$missing" || -a "$entry" ]] || continue
 	_canonpath entry
-	if [[ -a "$entry" && ! -d "$entry" &&
-				    "$entry" != *.jar && "$entry" = /* ]]; then
+	if [[ -a "$entry" && ! -d "$entry" && "$entry" != *.jar && "$entry" = /* ]]; then
 	    entry=${entry%/*}
 	fi
 	entries="${entries:+$entries:}$entry"
@@ -254,10 +240,7 @@ function onpath
 	    ;;
     esac
     # Now set the real variable back to the modified temp value.
-    case "$pth_var" in
-	(PATH) PATH="$pth_tmp" ;;
-	(*) eval export $pth_var="$pth_tmp" ;;
-    esac
+    eval "export $pth_var='$pth_tmp'"
     unset entry entries action pth_var pth_tmp mark missing
 }
 
@@ -367,12 +350,9 @@ function cleanpath
 
    # Loop through specified path variables, defaulting to PATH.
    for pth_var in ${*:-PATH}; do
-      # Set a temp var to path value, special-casing PATH for performance.
+      # Set a temp var to current path value.
       # Add artificial leading and trailing colons for regularity of syntax.
-      case "$pth_var" in
-	 (PATH) old_path=":$PATH:" ;;
-	 (*) eval old_path=:\$$pth_var: ;;
-      esac
+      eval old_path=:\$$pth_var:
       # Skip paths which are unset
       [[ "$old_path" = "::" ]] && continue
       # Turn all instances of "::" into ":.:".
@@ -384,7 +364,7 @@ function cleanpath
       IFS=:
       set -- $old_path
       IFS=$oldifs
-      # Now walk through $*, placing all previously-unseen entries back
+      # Now walk through $@, placing all previously-unseen entries back
       # into the new path variable. We remember each entry on the 'seen'
       # list as we encounter it for subsequent rejection. If testdirs
       # is set, we remove entries if they don't exist as directories.
@@ -394,8 +374,8 @@ function cleanpath
 	  set -A seen
       fi
       unset new_path
-      for entry in $*; do
-	 for prev in ${seen[*]}; do
+      for entry in "$@"; do
+	 for prev in "${seen[@]}"; do
 	    if [[ "$entry" = "$prev" ]]; then
 	       if [[ -n "$verbose" ]]; then
 		  echo 1>&2 "Removing redundant entry: $entry"
@@ -415,10 +395,7 @@ function cleanpath
       unset seen entry prev
       # Now set the real variable back to the modified temp value.
       if [[ -z "$nmode" ]]; then
-	 case "$pth_var" in
-	    (PATH) PATH="$new_path" ;;
-	    (*) eval $pth_var="$new_path" ;;
-	 esac
+	 eval "$pth_var='$new_path'"
       fi
    done
 }
@@ -437,10 +414,7 @@ function listpath
 	return 1
     fi
     pth_var=${1:-PATH}
-    case "$pth_var" in
-	(PATH) pth_tmp="$PATH" ;;
-	(*) eval pth_tmp=\$$pth_var ;;
-    esac
+    eval pth_tmp=\$$pth_var
     oldifs="$IFS"
     IFS=:
     for entry in $pth_tmp; do
