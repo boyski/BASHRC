@@ -11,10 +11,12 @@ set autowrite
 set nobackup nowritebackup
 set shiftwidth=4
 set shortmess+=r
-set smartindent
 set tabstop=8
 syntax off
 set nohlsearch
+"
+set smartindent
+filetype plugin indent on
 "
 " Avoids a screwy "feature" added in VIM 7.
 let loaded_matchparen = 1
@@ -41,3 +43,6 @@ map Q W
 "
 " Bind *Q to a macro which quotes the text by prepending "> ".
 "map *Q :.,$s?^?> ?
+
+let @P = 'Oimport pdb; pdb.set_trace()'
+let @N = 'Oimport nose.tools; nose.tools.set_trace()'
