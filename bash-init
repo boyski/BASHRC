@@ -50,11 +50,11 @@ source $BASHRC/func/pathfuncs
 #####################################################################
 # Exported settings belong in ~/.bash-topshell
 #####################################################################
-if [[ "$BASH_INIT" != *$user* || "$*" == *-force* ]]; then
+if [[ "$BASHRC_INIT" != *$user* || "$*" == *-force* ]]; then
     # Use "source $BASHRC/bash-init -reset" to force an initial PATH setting
     if [[ "$*" == *-reset* ]]; then
 	echo "$0: RESETTING ENVIRONMENT FOR $user IN $$ FROM $topshell" >&2
-	unset BASH_INIT
+	unset BASHRC_INIT
 	PATH=/bin:/usr/bin
 	[[ ! -r /etc/profile ]] || source /etc/profile
     elif [[ "$*" == *-debug* || "$user" != "$LOGNAME" ]]; then
@@ -65,7 +65,7 @@ if [[ "$BASH_INIT" != *$user* || "$*" == *-force* ]]; then
     # Remove redundant entries in these path variables.
     cleanpath PATH MANPATH
 
-    export BASH_INIT=${BASH_INIT:+$BASH_INIT:}$user
+    export BASHRC_INIT=${BASHRC_INIT:+$BASHRC_INIT:}$user
 fi
 
 #####################################################################
