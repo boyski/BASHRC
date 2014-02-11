@@ -17,7 +17,9 @@ export LOGNAME=${LOGNAME:-${USER:-$(logname)}}
 export BASHRC=${BASH_SOURCE[0]%/*}
 [[ ! -f ${BASHRC?} ]] || BASHRC=.
 
-# Find the config files to be sourced.
+# Find the config files to be sourced. The point here is to
+# allow anbody's config files to be sourced, not just our own.
+# Anybody using the BASHRC system, that is.
 if [[ "$*" == *-user=* ]]; then
     # Source standard/versioned config files of specified user.
     for arg in "$@"; do
@@ -37,11 +39,15 @@ else
     user=${user##*/}
     eval home=~$user
     if [[ "$home" = "~$user" ]]; then
-	user=${user:-${LOGNAME:=$(logname)}}
+	user=${LOGNAME:=$(logname)}
 	eval home=~$user
     fi
     topshell=$home/.bash-topshell
     pershell=$home/.bash-pershell
+    if [[ ! -f $topshell ]]; then
+	topshell=$HOME/.bash-topshell
+	pershell=$HOME/.bash-pershell
+    fi
 fi
 
 # These functions can be used in setting up PATH variables.
