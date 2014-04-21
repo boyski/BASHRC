@@ -13,6 +13,10 @@ unset BASH_ENV
 # Cygwin doesn't, or at least at one time didn't, set LOGNAME.
 export LOGNAME=${LOGNAME:-${USER:-$(logname)}}
 
+# This is an exported function on RHEL6 which was inadvertently
+# allowed to leak into user environments. Red Hat bug, fixing here.
+unset module
+
 # Work out the location of the framework.
 export BASHRC=${BASH_SOURCE[0]%/*}
 [[ ! -f ${BASHRC?} ]] || BASHRC=.
