@@ -27,7 +27,7 @@ set vb t_vb=
 set ff=unix
 "
 " Bind the + key to a macro which reformats the current text paragraph.
-map + {!}fmt -w 68}
+map + {!}fmt -w 74}
 "
 " Let the user set shiftwidth to 'n' by typing '*n'.
 map *2 :set sw=2
