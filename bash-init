@@ -51,6 +51,10 @@ else
     if [[ ! -f $topshell ]]; then
 	topshell=$HOME/.bash-topshell
 	pershell=$HOME/.bash-pershell
+	if [[ ! -f $topshell && -f $BASHRC/USERS/$user/topshell ]]; then
+	    topshell=$BASHRC/USERS/$user/topshell
+	    pershell=$BASHRC/USERS/$user/pershell
+	fi
     fi
 fi
 
@@ -89,3 +93,5 @@ if [[ "$*" == *-pershell* && -f $pershell ]]; then
 fi
 
 unset topshell pershell user home
+
+: Ensure $? == 0 when this script ends.

@@ -21,7 +21,7 @@ function _ps1_cwd {
     return $1 # preserve original $?
 }
 
-function ps1 {
+function _ps1 {
     if [[ "$BASH_VERSION" == [123]* ]]; then
 	echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) $? \#% '
     else
@@ -29,7 +29,14 @@ function ps1 {
     fi
 }
 
+function ps1 {
+    if [[ "$1" == demo* ]]; then
+	PS1='\n% '
+    else
+	eval PS1='$(_ps1)'
+    fi
+}
+
 PROMPT_DIRTRIM=${PROMPT_DIRTRIM:-3}
 
-# Tpical usage:
-# eval PS1='$(ps1)'
+# Typical usage: "source $BASHRC/func/ps1 && ps1"

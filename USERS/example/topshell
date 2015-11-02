@@ -1,3 +1,6 @@
-# This file is for setting exported variables (PATH, MANPATH, etc.)
+# This file is primarily for setting exported variables (PATH, PAGER, etc.)
+# In particular, *additive* env settings such as "PATH=$PATH:/usr/abcd/bin"
+# should only be made here. Static env settings such as "FOO=bar" may be
+# made here or in pershell though the more "correct" location is here.
 
 export EDITOR=vi

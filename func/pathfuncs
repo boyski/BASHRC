@@ -3,16 +3,16 @@
 # Written by David Boyce ~1995 and placed in the public domain.
 
 # These functions manipulate path variables. A path variable is
-# considered to be an exported shell variable whose value is organized
+# defined as an exported shell variable whose value is organized
 # as a series of potentially null entries (strings) separated by colons.
 # I.e:
 #      /usr/xxx:/usr/yyy::/usr/zzz:
 # is a path value. Note that path entries are generally but not
-# necessarily directories, and even if they are conceptually
-# directories those directories are not required to exist at a given
+# necessarily directories, and that even if they are (conceptually)
+# directories those directories are not required to exist at any given
 # time. Also, note that path vars do not need to be exported but they
 # usually are; to keep the code simple these tools assume they are
-# to be exported. Last, because it simplifies the usage, we assume
+# exported. Last, because it simplifies the usage, we assume
 # all path variable names are in upper case. This allows shorthand
 # such as "onpath tmp" by eliminating confusion over whether 'tmp'
 # is a pathvar or a path entry.
@@ -34,14 +34,15 @@
 
 # These functions require a modern ksh/bash/etc shell. They use only
 # features which are in the older (1988) ksh version, though the
-# substitutions could be done much more easily and readably with the
+# substitutions could be done more easily and readably with the
 # newer (POSIX) substitution operator.
 
 # Note that some path variables, PATH in particular, treat the empty
 # string as a synonym for the current directory. These functions
 # do not implement that special case; thus you must specify
 # the empty string '' to remove a literal empty string and
-# '.' to add or remove an entry called '.'.
+# '.' to add or remove an entry called '.'. POSIX has deprecated
+# empty strings in path variables for a long time.
 
 # Though not documented in the usage msgs, these will also accept no
 # more than one compound entry in colon-delimited format. More precisely,
@@ -62,7 +63,9 @@ function _canonpath
 	if [[ "$_val" != */* && "$_var" != */ ]]; then
 	    :
 	elif [[ -d "$_val" ]]; then
-	    cd "$_val" && cd "$OLDPWD" && eval $_var=$OLDPWD
+	    if [[ -x "$_val" ]]; then
+		cd "$_val" && cd "$OLDPWD" && eval $_var=$OLDPWD
+	    fi
 	elif [[ -f "$_val" ]]; then
 	    typeset _dir=${_val%/*} _base=${_val##*/}
 	    cd "$_dir" && cd "$OLDPWD" && eval $_var=$OLDPWD/$_base
@@ -86,9 +89,9 @@ function offpath
 	echo "The -F and -B flags are allowed for consistency but have no effect."
 	return 1
     fi
-    # Assumption: path variables start with capital letters!
+    # Assumption: path variable names match [A-Z]*PATH.
     # If first arg doesn't fit assumption, use PATH.
-    if [[ "$1" = [A-Z]* ]]; then
+    if [[ "$1" == [[:upper:]]*ATH ]]; then
 	pth_var=$1; shift
     else
 	pth_var=PATH
@@ -131,30 +134,31 @@ function onpath
     typeset entry entries action pth_var pth_tmp mark missing
     if [[ $# -lt 1 || ( "$1" = -* && "$1" != -[FBQqRr]* ) ]]; then
 	exec 1>&2
-	echo "Usage:    onpath <path-var> [-Q] -[FB] entry ..."
-	echo "          onpath <path-var> [-Q] -[FB]marker entry ..."
-	echo "Examples: onpath PATH -F $HOME/bin /usr/sbin"
+	echo "Usage:    onpath [<path-var>] [-Q] -[FB] entry ..."
+	echo "          onpath [<path-var>] [-Q] -[FBR]marker entry ..."
+	echo "Examples: onpath ~/bin /usr/sbin"
+	echo "          onpath PATH -F $HOME/bin /usr/sbin"
 	echo "          onpath PATH -B/usr/bin /usr/ccs/bin"
-	echo "          onpath PATH -Q /opt/SUNWspro/bin"
+	echo "          onpath -Q /opt/SUNWspro/bin"
 	echo "          onpath MANPATH $HOME/man:/usr/local/gnu/man"
-	echo "          onpath ~/bin /usr/sbin"
 	echo
-	echo 'Adds directories to search paths. For each specified entry, onpath'
-	echo 'will first remove all instances of it from the specified <path-var>'
-	echo 'and then add it back to either the front (-F) or back (-B).'
-	echo 'Thus it always leaves exactly one instance of the new entry in'
-	echo 'the <path-var>. The default is -F. Appending an entry to the'
-	echo '-F or -B flag with no intervening whitespace, e.g. -F/usr/bin,'
-	echo 'indicates that you want to place the new entry directly in front'
-	echo 'or in back of the existing entry. Use of -R/foo/bar will cause'
+	echo 'Adds directories to search paths (PATH by default). For each'
+	echo 'specified entry, onpath will first remove all instances of it'
+	echo 'from the specified <path-var> using the companion "offpath"'
+	echo 'function, then add it back to either the front (-F, default)'
+	echo 'or back (-B). Thus it always leaves exactly one instance of the'
+	echo 'new entry in the <path-var>. Attaching an existing entry'
+	echo 'to -F or -B with no intervening whitespace, e.g. -F/usr/bin,'
+	echo 'indicates that you want to place the new entry directly in front (-F)'
+	echo 'or in back (-B) of the existing entry. Use of -R/foo/bar will cause'
 	echo '/foo/bar to be replaced with the new entries.'
 	echo 'The -Q flag causes nonexistent entries to be silently skipped,'
-	echo 'i.e. not placed on the path.'
+	echo '(not placed on the path). Use "offpath" to remove entries.'
 	return 1
     fi
-    # Assumption: path variables start with capital letters!
+    # Assumption: path variable names match [A-Z]*PATH.
     # If first arg doesn't fit assumption, use PATH.
-    if [[ "$1" = [A-Z]* ]]; then
+    if [[ "$1" == [[:upper:]]*ATH ]]; then
 	pth_var=$1; shift
     else
 	pth_var=PATH
@@ -335,8 +339,8 @@ function cleanpath
 	    echo "          cleanpath MANPATH (cleans MANPATH)"
 	    echo "          cleanpath -T LD_LIBRARY_PATH LD_RUN_PATH"
 	    echo
-	    echo 'Removes redundant entries from a given list of path variables,'
-	    echo 'default PATH. The -T flag causes entries that do not exist'
+	    echo 'Removes redundant entries from a given list of path variables'
+	    echo '(default=PATH). The -T flag causes entries which do not exist'
 	    echo 'to be removed as well, and -V prints any entries removed.'
 	    echo 'The -N flag shows what would be done without doing anything.'
 	    return 1
@@ -425,4 +429,4 @@ function listpath
 	echo "."
     fi
 }
-alias path=listpath
+function path { listpath "$@"; }
