@@ -1,11 +1,19 @@
 #####################################################################
 # DO NOT CHANGE THIS FILE LOCALLY! It provides only a framework
 # for finding your own bash config files at ~/.bash-topshell and
-# ~/.bash-pershell. Make your customizations there.  See the README
-# file in the same directory as this file for details.
+# ~/.bash-pershell (or in the equivalent USERS/$LOGNAME area if you've
+# chosen to version them). Make your customizations to those files.
+# Self-referential environment settings like PATH=$PATH:/foo/bar must
+# go in topshell, aliases, functions, and unexported shell variables
+# belong in pershell, and non-self-referential environment settings
+# such as EDITOR=vim can go either place though topshell is preferred.
+# See the README in the same directory as this file for details.
 #####################################################################
 
-# Note: we try hard to use only bash builtins here.
+# Note: we try to use only bash builtins here (avoid fork/exec).
+
+# Debugging aid.
+[[ ! -x ~/.bash-verbose ]] || set -x
 
 # This is normally not set, but if set must not be propagated!
 unset BASH_ENV
@@ -14,7 +22,7 @@ unset BASH_ENV
 export LOGNAME=${LOGNAME:-${USER:-$(logname)}}
 
 # This is an exported function on RHEL6 which was inadvertently
-# allowed to leak into user environments. Red Hat bug, fixing here.
+# allowed to leak into user environments. Red Hat bug, WAR here.
 unset module
 
 # Work out the location of the framework.
@@ -93,5 +101,11 @@ if [[ "$*" == *-pershell* && -f $pershell ]]; then
 fi
 
 unset topshell pershell user home
+
+# Useful for updating active shells after tweaking pershell file.
+alias pershell='source $BASHRC/USERS/$LOGNAME/pershell'
+
+# Debugging aid undo.
+[[ ! -x ~/.bash-verbose ]] || set +x
 
 : Ensure $? == 0 when this script ends.

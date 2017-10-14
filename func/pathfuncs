@@ -3,26 +3,25 @@
 # Written by David Boyce ~1995 and placed in the public domain.
 
 # These functions manipulate path variables. A path variable is
-# defined as an exported shell variable whose value is organized
-# as a series of potentially null entries (strings) separated by colons.
+# defined as a potentially exported shell variable whose value is organized
+# as a sequence of potentially null entries (strings) separated by colons.
 # I.e:
 #      /usr/xxx:/usr/yyy::/usr/zzz:
 # is a path value. Note that path entries are generally but not
 # necessarily directories, and that even if they are (conceptually)
 # directories those directories are not required to exist at any given
 # time. Also, note that path vars do not need to be exported but they
-# usually are; to keep the code simple these tools assume they are
-# exported. Last, because it simplifies the usage, we assume
-# all path variable names are in upper case. This allows shorthand
-# such as "onpath tmp" by eliminating confusion over whether 'tmp'
-# is a pathvar or a path entry.
+# usually are; these functions assume they should be exported though this
+# can be suppressed with the -E option. Last, we assume all path variable
+# names match /[A-Z]*PATH$/. This allows shorthand such as "onpath bin"
+# by eliminating confusion over whether 'bin' is a pathvar or a path.
 
 # The offpath() function removes all instances of the specified entry(s)
 # from the specified path variable.
 
 # The onpath() function uses offpath() to ensure that the specified
 # entries don't occur in the specified path variable, then adds them at
-# the front or back or in relative location in the interior, as requested.
+# the front or back or in relative locations in the interior, as requested.
 
 # The cleanpath() function removes the 2nd through last instances
 # of each entry in the specified path(s). Optionally, it also removes
@@ -132,10 +131,11 @@ function offpath
 function onpath
 {
     typeset entry entries action pth_var pth_tmp mark missing
+    typeset exportit=export
     if [[ $# -lt 1 || ( "$1" = -* && "$1" != -[FBQqRr]* ) ]]; then
 	exec 1>&2
-	echo "Usage:    onpath [<path-var>] [-Q] -[FB] entry ..."
-	echo "          onpath [<path-var>] [-Q] -[FBR]marker entry ..."
+	echo "Usage:    onpath [<path-var>] [-E] [-Q] -[FB] entry ..."
+	echo "          onpath [<path-var>] [-E] [-Q] -[FBR]marker entry ..."
 	echo "Examples: onpath ~/bin /usr/sbin"
 	echo "          onpath PATH -F $HOME/bin /usr/sbin"
 	echo "          onpath PATH -B/usr/bin /usr/ccs/bin"
@@ -152,8 +152,9 @@ function onpath
 	echo 'indicates that you want to place the new entry directly in front (-F)'
 	echo 'or in back (-B) of the existing entry. Use of -R/foo/bar will cause'
 	echo '/foo/bar to be replaced with the new entries.'
-	echo 'The -Q flag causes nonexistent entries to be silently skipped,'
-	echo '(not placed on the path). Use "offpath" to remove entries.'
+	echo 'The -Q flag causes nonexistent entries to be silently skipped'
+	echo '(not placed on the path) and -E suppresses export of <path-var>.'
+	echo 'Use "offpath" to remove entries.'
 	return 1
     fi
     # Assumption: path variable names match [A-Z]*PATH.
@@ -166,13 +167,14 @@ function onpath
     while [[ "$1" = -* ]]; do
 	case "$1" in
 	    (-[FfBbRr]*) action=$1 ;;
+	    (-[Ee]) exportit= ;;
 	    (-[Qq]) missing=1 ;;
 	    (-*) echo 1>&2 "onpath: unrecognized flag $1"; return 1 ;;
 	esac
 	shift
     done
     : ${action:=-F}
-    # Get all instances of the specified entries out of the current path.
+    # Remove all instances of the specified entries from the current path.
     offpath $pth_var "$@"
     # Set a temp var to current path value.
     eval pth_tmp=\$$pth_var
@@ -244,7 +246,7 @@ function onpath
 	    ;;
     esac
     # Now set the real variable back to the modified temp value.
-    eval "export $pth_var='$pth_tmp'"
+    eval "$exportit $pth_var='$pth_tmp'"
     unset entry entries action pth_var pth_tmp mark missing
 }
 

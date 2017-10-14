@@ -1,6 +1,10 @@
 #!/bin/bash (just so 'file' says the right thing)
 
 # These functions may be useful for generating prompt strings.
+# Typical usage: "source $BASHRC/func/ps1 && ps1".
+# Or: "source $BASHRC/func/ps1 && ps1 color" for a color-enhanced prompt.
+# The prompt can be switched to "demo mode" via "ps1 demo", and back to
+# regular with "ps1" or "ps1 color".
 
 function _ps1_dirs {
     if [[ "${#DIRSTACK[@]}" > 1 ]]; then
@@ -23,9 +27,17 @@ function _ps1_cwd {
 
 function _ps1 {
     if [[ "$BASH_VERSION" == [123]* ]]; then
-	echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) $? \#% '
+	if [[ "$1" == col* ]]; then
+	    echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) \[\033[01;31m\]$?\[\033[00m\] \#% '
+	else
+	    echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) $? \#% '
+	fi
     else
-	echo -n '\u@\h $(_ps1_dirs $?)\w $? \#% '
+	if [[ "$1" == col* ]]; then
+	    echo -n '\u@\h $(_ps1_dirs $?)\w \[\033[01;31m\]$?\[\033[00m\] \#% '
+	else
+	    echo -n '\u@\h $(_ps1_dirs $?)\w $? \#% '
+	fi
     fi
 }
 
@@ -33,10 +45,8 @@ function ps1 {
     if [[ "$1" == demo* ]]; then
 	PS1='\n% '
     else
-	eval PS1='$(_ps1)'
+	eval PS1='$(_ps1 $1)'
     fi
 }
 
 PROMPT_DIRTRIM=${PROMPT_DIRTRIM:-3}
-
-# Typical usage: "source $BASHRC/func/ps1 && ps1"
