@@ -8,17 +8,27 @@
 # 1. This version allows you to access the first stacked directory using
 #    $lwd ("last working directory") as a shorthand for ${DIRSTACK[1]}.
 # 2. It allows you to say "pushd <filename>" which will pushd to
-#    "$(dirname <filename>)".
+#    "$(dirname <filename>)". Same for "cd <filename>".
 # 3. It will not push a dir to the stack that's already in the stack.
 #    Pushing to a dir already on the stack just moves it to the top.
+
+function cd
+{
+    # Allow cd-ing to a file (use its parent directory).
+    typeset _tgt=${!#}
+    [[ "$_tgt" != http://* ]] || _tgt=/${_tgt#http://[a-zA-Z_-.]*/}
+    [[ ! -f "$_tgt" ]] || _tgt="${_tgt%/*}"
+    builtin cd "$_tgt"
+}
 
 function pushd
 {
     if [[ -n "$1" ]]; then
 	typeset _tgt=${1%/} _i; shift
-	if [[ -f $_tgt ]]; then
-	    _tgt="${_tgt%/*}"
-	fi
+	# Allow pushd-ing to a URL on the assumption that the RHS is a local path.
+	[[ "$_tgt" != http://* ]] || _tgt=/${_tgt#http://[a-zA-Z_-.]*/}
+	# Allow pushd-ing to a file (use its parent directory).
+	[[ ! -f "$_tgt" ]] || _tgt="${_tgt%/*}"
 	typeset -i _i=${#DIRSTACK[@]}
 	while (( $_i > 0 )); do
 	    let _i--
