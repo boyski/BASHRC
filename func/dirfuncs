@@ -16,9 +16,13 @@ function cd
 {
     # Allow cd-ing to a file (use its parent directory).
     typeset _tgt=${!#}
-    [[ "$_tgt" != http://* ]] || _tgt=/${_tgt#http://[a-zA-Z_-.]*/}
-    [[ ! -f "$_tgt" ]] || _tgt="${_tgt%/*}"
-    builtin cd "$_tgt"
+    if [[ $# > 0 && "$_tgt" != -* ]]; then
+	[[ "$_tgt" != http://* ]] || _tgt=/${_tgt#http://[a-zA-Z_-.]*/}
+	[[ ! -f "$_tgt" ]] || _tgt="${_tgt%/*}"
+	builtin cd "$_tgt"
+    else
+	builtin cd "$@"
+    fi
 }
 
 function pushd
