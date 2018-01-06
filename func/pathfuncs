@@ -58,17 +58,17 @@ function _canonpath
 {
     typeset _var _val
     for _var in "$@"; do
-	eval _val=\$$_var
-	if [[ "$_val" != */* && "$_var" != */ ]]; then
-	    :
-	elif [[ -d "$_val" ]]; then
-	    if [[ -x "$_val" ]]; then
-		cd "$_val" && cd "$OLDPWD" && eval $_var=$OLDPWD
-	    fi
-	elif [[ -f "$_val" ]]; then
-	    typeset _dir=${_val%/*} _base=${_val##*/}
-	    cd "$_dir" && cd "$OLDPWD" && eval $_var=$OLDPWD/$_base
-	fi
+        eval _val=\$$_var
+        if [[ "$_val" != */* && "$_var" != */ ]]; then
+            :
+        elif [[ -d "$_val" ]]; then
+            if [[ -x "$_val" ]]; then
+                cd "$_val" && cd "$OLDPWD" && eval $_var=$OLDPWD
+            fi
+        elif [[ -f "$_val" ]]; then
+            typeset _dir=${_val%/*} _base=${_val##*/}
+            cd "$_dir" && cd "$OLDPWD" && eval $_var=$OLDPWD/$_base
+        fi
     done
 }
 
@@ -79,21 +79,21 @@ function offpath
 {
     typeset entry pth_var pth_tmp new_path elem
     if [[ $# -lt 1 || ( "$1" = -* && "$1" != -[FfBb]* ) ]]; then
-	exec 1>&2
-	echo "Usage:    offpath [<path-var>] entry ..."
-	echo "Examples: offpath MANPATH $HOME/man /usr/local/gnu/man"
-	echo "          offpath /usr/local/bin"
-	echo
-	echo "Removes all occurrences of each specified entry from <path-var>"
-	echo "The -F and -B flags are allowed for consistency but have no effect."
-	return 1
+        exec 1>&2
+        echo "Usage:    offpath [<path-var>] entry ..."
+        echo "Examples: offpath MANPATH $HOME/man /usr/local/gnu/man"
+        echo "          offpath /usr/local/bin"
+        echo
+        echo "Removes all occurrences of each specified entry from <path-var>"
+        echo "The -F and -B flags are allowed for consistency but have no effect."
+        return 1
     fi
     # Assumption: path variable names match [A-Z]*PATH.
     # If first arg doesn't fit assumption, use PATH.
     if [[ "$1" == [[:upper:]]*ATH ]]; then
-	pth_var=$1; shift
+        pth_var=$1; shift
     else
-	pth_var=PATH
+        pth_var=PATH
     fi
     # Allow but ignore a flag here for consistency with onpath.
     [[ "$1" = -* ]] && shift
@@ -109,21 +109,26 @@ function offpath
     set -o noglob
     # Separate any entry-lists provided in path format.
     for elem in $pth_tmp; do
-	: ${elem:=.}
-	for entry in "$@"; do
-	    _canonpath entry
-	    if [[ -a "$entry" && ! -d "$entry" && "$entry" = /* ]]; then
-		[[ "$elem" != "${entry%/*}" ]] || continue 2
-	    fi
-	    [[ "$elem" != "$entry" ]] || continue 2
-	done
-	new_path="${new_path:+$new_path:}$elem"
+        : ${elem:=.}
+        for entry in "$@"; do
+            _canonpath entry
+            if [[ -a "$entry" && ! -d "$entry" && "$entry" = /* ]]; then
+                [[ "$elem" != "${entry%/*}" ]] || continue 2
+            fi
+            [[ "$elem" != "$entry" ]] || continue 2
+        done
+        new_path="${new_path:+$new_path:}$elem"
     done
     IFS=$oldifs
     unset oldifs
     set +o noglob
     # Now set the real variable back to the modified temp value.
-    eval "$pth_var='$new_path'"
+    # But if the result is a null value remove it entirely.
+    if [[ -n "$new_path" ]]; then
+        eval "$pth_var='$new_path'"
+    else
+        eval "unset $pth_var"
+    fi
 }
 
 ##########################################################################
@@ -133,45 +138,45 @@ function onpath
     typeset entry entries action pth_var pth_tmp mark missing
     typeset exportit=export
     if [[ $# -lt 1 || ( "$1" = -* && "$1" != -[FBQqRr]* ) ]]; then
-	exec 1>&2
-	echo "Usage:    onpath [<path-var>] [-E] [-Q] -[FB] entry ..."
-	echo "          onpath [<path-var>] [-E] [-Q] -[FBR]marker entry ..."
-	echo "Examples: onpath ~/bin /usr/sbin"
-	echo "          onpath PATH -F $HOME/bin /usr/sbin"
-	echo "          onpath PATH -B/usr/bin /usr/ccs/bin"
-	echo "          onpath -Q /opt/SUNWspro/bin"
-	echo "          onpath MANPATH $HOME/man:/usr/local/gnu/man"
-	echo
-	echo 'Adds directories to search paths (PATH by default). For each'
-	echo 'specified entry, onpath will first remove all instances of it'
-	echo 'from the specified <path-var> using the companion "offpath"'
-	echo 'function, then add it back to either the front (-F, default)'
-	echo 'or back (-B). Thus it always leaves exactly one instance of the'
-	echo 'new entry in the <path-var>. Attaching an existing entry'
-	echo 'to -F or -B with no intervening whitespace, e.g. -F/usr/bin,'
-	echo 'indicates that you want to place the new entry directly in front (-F)'
-	echo 'or in back (-B) of the existing entry. Use of -R/foo/bar will cause'
-	echo '/foo/bar to be replaced with the new entries.'
-	echo 'The -Q flag causes nonexistent entries to be silently skipped'
-	echo '(not placed on the path) and -E suppresses export of <path-var>.'
-	echo 'Use "offpath" to remove entries.'
-	return 1
+        exec 1>&2
+        echo "Usage:    onpath [<path-var>] [-E] [-Q] -[FB] entry ..."
+        echo "          onpath [<path-var>] [-E] [-Q] -[FBR]marker entry ..."
+        echo "Examples: onpath ~/bin /usr/sbin"
+        echo "          onpath PATH -F $HOME/bin /usr/sbin"
+        echo "          onpath PATH -B/usr/bin /usr/ccs/bin"
+        echo "          onpath -Q /opt/SUNWspro/bin"
+        echo "          onpath MANPATH $HOME/man:/usr/local/gnu/man"
+        echo
+        echo 'Adds directories to search paths (PATH by default). For each'
+        echo 'specified entry, onpath will first remove all instances of it'
+        echo 'from the specified <path-var> using the companion "offpath"'
+        echo 'function, then add it back to either the front (-F, default)'
+        echo 'or back (-B). Thus it always leaves exactly one instance of the'
+        echo 'new entry in the <path-var>. Attaching an existing entry'
+        echo 'to -F or -B with no intervening whitespace, e.g. -F/usr/bin,'
+        echo 'indicates that you want to place the new entry directly in front (-F)'
+        echo 'or in back (-B) of the existing entry. Use of -R/foo/bar will cause'
+        echo '/foo/bar to be replaced with the new entries.'
+        echo 'The -Q flag causes nonexistent entries to be silently skipped'
+        echo '(not placed on the path) and -E suppresses export of <path-var>.'
+        echo 'Use "offpath" to remove entries.'
+        return 1
     fi
     # Assumption: path variable names match [A-Z]*PATH.
     # If first arg doesn't fit assumption, use PATH.
     if [[ "$1" == [[:upper:]]*ATH ]]; then
-	pth_var=$1; shift
+        pth_var=$1; shift
     else
-	pth_var=PATH
+        pth_var=PATH
     fi
     while [[ "$1" = -* ]]; do
-	case "$1" in
-	    (-[FfBbRr]*) action=$1 ;;
-	    (-[Ee]) exportit= ;;
-	    (-[Qq]) missing=1 ;;
-	    (-*) echo 1>&2 "onpath: unrecognized flag $1"; return 1 ;;
-	esac
-	shift
+        case "$1" in
+            (-[FfBbRr]*) action=$1 ;;
+            (-[Ee]) exportit= ;;
+            (-[Qq]) missing=1 ;;
+            (-*) echo 1>&2 "onpath: unrecognized flag $1"; return 1 ;;
+        esac
+        shift
     done
     : ${action:=-F}
     # Remove all instances of the specified entries from the current path.
@@ -181,69 +186,69 @@ function onpath
     # Collect the specified entries into a colon-separated list.
     # If entry is a full file path, assume user meant its containing dir.
     for entry in "$@"; do
-	[[ -z "$missing" || -a "$entry" ]] || continue
-	_canonpath entry
-	if [[ -a "$entry" && ! -d "$entry" && "$entry" != *.jar && "$entry" = /* ]]; then
-	    entry=${entry%/*}
-	fi
-	entries="${entries:+$entries:}$entry"
+        [[ -z "$missing" || -a "$entry" ]] || continue
+        _canonpath entry
+        if [[ -a "$entry" && ! -d "$entry" && "$entry" != *.jar && "$entry" = /* ]]; then
+            entry=${entry%/*}
+        fi
+        entries="${entries:+$entries:}$entry"
     done
     # Now just add to front or back as requested. If -[FB] is followed
     # immediately by a directory, we try to place the entries immediately
     # before or after that marker directory. Similarly, if -R<replace> is
     # used, "<replace>" is removed and replaced with the new entries.
     case "$action" in
-	(-[Ff]) pth_tmp=$entries${pth_tmp:+:$pth_tmp} ;;
-	(-[Bb]) pth_tmp=${pth_tmp:+$pth_tmp:}$entries ;;
-	(-[Ff]*|-[Rr]*) 
-	    case "$action" in
-		-F*) mark=${action#-F} ;;
-		-f*) mark=${action#-f} ;;
-		-R*) mark=${action#-R} ;;
-		-r*) mark=${action#-r} ;;
-	    esac
-	    pth_tmp=:$pth_tmp:
-	    if [[ "$pth_tmp" = "::" ]]; then
-		# Marker is only previous entry - just put new entries in path
-		pth_tmp=$entries
-	    elif [[ "$pth_tmp" != *:$mark:* ]]; then
-		# Marker missing - just put new entries at front
-		pth_tmp=${pth_tmp%:}
-		pth_tmp=$entries$pth_tmp
-	    else
-		case "$action" in
-		    (-[Ff]*) 
-			pth_tmp=${pth_tmp%%:$mark:*}:$entries:$mark:${pth_tmp#*:$mark:}
-			pth_tmp=${pth_tmp#:}
-			pth_tmp=${pth_tmp%:}
-			;;
-		    (-[Rr]*) 
-			pth_tmp=${pth_tmp%%:$mark:*}:$entries:${pth_tmp#*:$mark:}
-			pth_tmp=${pth_tmp#:}
-			pth_tmp=${pth_tmp%:}
-			;;
-	        esac
-	    fi
-	    ;;
-	(-[Bb]*) 
-	    case "$action" in
-		-B*) mark=${action#-B} ;;
-		-b*) mark=${action#-b} ;;
-	    esac
-	    pth_tmp=:$pth_tmp:
-	    if [[ "$pth_tmp" = "::" ]]; then
-		# Marker is only previous entry - just put new entries in path
-		pth_tmp=$entries
-	    elif [[ "$pth_tmp" != *:$mark:* ]]; then
-		# Marker missing - just put new entries at back
-		pth_tmp=${pth_tmp#:}
-		pth_tmp=$pth_tmp$entries
-	    else
-		pth_tmp=${pth_tmp%%:$mark:*}:$mark:$entries:${pth_tmp#*:$mark:}
-		pth_tmp=${pth_tmp#:}
-		pth_tmp=${pth_tmp%:}
-	    fi
-	    ;;
+        (-[Ff]) pth_tmp=$entries${pth_tmp:+:$pth_tmp} ;;
+        (-[Bb]) pth_tmp=${pth_tmp:+$pth_tmp:}$entries ;;
+        (-[Ff]*|-[Rr]*)
+            case "$action" in
+                -F*) mark=${action#-F} ;;
+                -f*) mark=${action#-f} ;;
+                -R*) mark=${action#-R} ;;
+                -r*) mark=${action#-r} ;;
+            esac
+            pth_tmp=:$pth_tmp:
+            if [[ "$pth_tmp" = "::" ]]; then
+                # Marker is only previous entry - just put new entries in path
+                pth_tmp=$entries
+            elif [[ "$pth_tmp" != *:$mark:* ]]; then
+                # Marker missing - just put new entries at front
+                pth_tmp=${pth_tmp%:}
+                pth_tmp=$entries$pth_tmp
+            else
+                case "$action" in
+                    (-[Ff]*)
+                        pth_tmp=${pth_tmp%%:$mark:*}:$entries:$mark:${pth_tmp#*:$mark:}
+                        pth_tmp=${pth_tmp#:}
+                        pth_tmp=${pth_tmp%:}
+                        ;;
+                    (-[Rr]*)
+                        pth_tmp=${pth_tmp%%:$mark:*}:$entries:${pth_tmp#*:$mark:}
+                        pth_tmp=${pth_tmp#:}
+                        pth_tmp=${pth_tmp%:}
+                        ;;
+                esac
+            fi
+            ;;
+        (-[Bb]*)
+            case "$action" in
+                -B*) mark=${action#-B} ;;
+                -b*) mark=${action#-b} ;;
+            esac
+            pth_tmp=:$pth_tmp:
+            if [[ "$pth_tmp" = "::" ]]; then
+                # Marker is only previous entry - just put new entries in path
+                pth_tmp=$entries
+            elif [[ "$pth_tmp" != *:$mark:* ]]; then
+                # Marker missing - just put new entries at back
+                pth_tmp=${pth_tmp#:}
+                pth_tmp=$pth_tmp$entries
+            else
+                pth_tmp=${pth_tmp%%:$mark:*}:$mark:$entries:${pth_tmp#*:$mark:}
+                pth_tmp=${pth_tmp#:}
+                pth_tmp=${pth_tmp%:}
+            fi
+            ;;
     esac
     # Now set the real variable back to the modified temp value.
     eval "$exportit $pth_var='$pth_tmp'"
@@ -254,156 +259,161 @@ function onpath
 
 function pkguse
 {
-   typeset base flag abs rel quiet undo
-   OPTIND=1
-   while getopts ":HhQU" flag; do
-      case $flag in
-	 ([Hh])
-	    exec 1>&2
-	    echo "Usage:    pkguse [-U] [-F|-B] base ..."
-	    echo "Examples: pkguse /opt/rational/clearcase"
-	    echo "          pkguse -Q /opt/sybase"
-	    echo "Description:"
-	    echo "	  Takes the base of a package, e.g. /opt/SUNWtcx, and"
-	    echo "	  adds the appropriate dirs to PATH and MANPATH."
-	    echo "	  Use -L to add .../lib to LD_LIBRARY_PATH."
-	    echo "	  Warnings for nonexistent dirs are suppressed by -Q."
-	    echo "	  Any -F or -B flags are passed on to onpath."
-	    echo
-	    echo 'Takes a base directory, such as /opt/local, and runs onpath()'
-	    echo 'multiple times to add the appropriate subdirs to PATH, MANPATH, etc.'
-	    echo 'Flags which are recognized by onpath/offpath are passed along unmodified.'
-	    return 1
-	    ;;
-	 ([Q]) quiet=SET ;;
-	 ([U]) undo=SET ;;
-	 (\?) OPTIND=$((OPTIND-1)); break ;; # a -F or -B flag was hit
-      esac
-   done
-   shift $((OPTIND-1))
+    typeset base flag abs rel quiet undo
+    OPTIND=1
+    while getopts ":HhQU" flag; do
+        case $flag in
+            ([Hh])
+                exec 1>&2
+                echo "Usage:    pkguse [-U] [-F|-B] base ..."
+                echo "Examples: pkguse /opt/rational/clearcase"
+                echo "          pkguse -Q /opt/sybase"
+                echo "Description:"
+                echo "        Takes the base of a package, e.g. /opt/SUNWtcx, and"
+                echo "        adds the appropriate dirs to PATH and MANPATH."
+                echo "        Use -L to add .../lib to LD_LIBRARY_PATH."
+                echo "        Warnings for nonexistent dirs are suppressed by -Q."
+                echo "        Any -F or -B flags are passed on to onpath."
+                echo
+                echo 'Takes a base directory, such as /opt/local, and runs onpath()'
+                echo 'multiple times to add the appropriate subdirs to PATH, MANPATH, etc.'
+                echo 'Flags which are recognized by onpath/offpath are passed along unmodified.'
+                return 1
+            ;;
+            ([Q]) quiet=SET ;;
+            ([U]) undo=SET ;;
+            (\?) OPTIND=$((OPTIND-1)); break ;; # a -F or -B flag was hit
+    esac
+    done
+    shift $((OPTIND-1))
 
-   if [[ "$1" = -* ]]; then
-      if [[ "$1" = */* ]]; then
-	 rel="$1"
-      else
-	 abs="$1"
-      fi
-      shift
-      if [[ "$1" = -* ]]; then
-	 echo 1>&2 "Error: unrecognized option: $1"
-	 return 1
-      fi
-   fi
+    if [[ "$1" = -* ]]; then
+        if [[ "$1" = */* ]]; then
+            rel="$1"
+        else
+            abs="$1"
+        fi
+        shift
+        if [[ "$1" = -* ]]; then
+            echo 1>&2 "Error: unrecognized option: $1"
+            return 1
+        fi
+    fi
 
-   for base in "$@"; do
-      if [[ -z "$undo" ]]; then
-	 if [[ -d $base/bin ]]; then
-	    onpath PATH ${abs:-${rel:+$rel/bin}} $base/bin
-	 elif [[ -z "$quiet" ]]; then
-	    echo 1>&2 "Warning: $base/bin: no such directory"
-	 fi
-	 if [[ -d $base/man ]]; then
-	    onpath MANPATH ${abs:-${rel:+$rel/man}} $base/man
-	 elif [[ -d $base/share/man ]]; then
-	    onpath MANPATH ${abs:-${rel:+$rel/man}} $base/share/man
-	 elif [[ -d $base/doc/man ]]; then
-	    onpath MANPATH ${abs:-${rel:+$rel/man}} $base/doc/man
-	 elif [[ -z "$quiet" ]]; then
-	    echo 1>&2 "Warning: $base/man: no such directory"
-	 fi
-      else
-	 offpath PATH $base/bin
-	 offpath MANPATH $base/man $base/doc/man
-	 offpath LD_LIBRARY_PATH $base/lib
-      fi
-   done
-   unset base flag abs rel quiet undo
+    for base in "$@"; do
+        if [[ -z "$undo" ]]; then
+            if [[ -d $base/bin ]]; then
+                onpath PATH ${abs:-${rel:+$rel/bin}} $base/bin
+                elif [[ -z "$quiet" ]]; then
+                echo 1>&2 "Warning: $base/bin: no such directory"
+            fi
+            if [[ -d $base/man ]]; then
+                onpath MANPATH ${abs:-${rel:+$rel/man}} $base/man
+            elif [[ -d $base/share/man ]]; then
+                onpath MANPATH ${abs:-${rel:+$rel/man}} $base/share/man
+            elif [[ -d $base/doc/man ]]; then
+                onpath MANPATH ${abs:-${rel:+$rel/man}} $base/doc/man
+            elif [[ -z "$quiet" ]]; then
+                echo 1>&2 "Warning: $base/man: no such directory"
+            fi
+        else
+            offpath PATH $base/bin
+            offpath MANPATH $base/man $base/doc/man
+            offpath LD_LIBRARY_PATH $base/lib
+        fi
+    done
+    unset base flag abs rel quiet undo
 }
 
 ##########################################################################
 
 function cleanpath
 {
-   typeset entry oldifs pth_var old_path new_path prev testdirs
-   typeset nmode verbose flag
-   OPTIND=1
-   while getopts "HhNTV" flag; do
-      case $flag in
-	 ([Hh]|\?)
-	    exec 1>&2
-	    echo "Usage: cleanpath [-NTV] [<path-var> ...]"
-	    echo "cleanpath -N doesn't actually change anything"
-	    echo "cleanpath -T also removes entries which don't exist"
-	    echo "cleanpath -V shows entries removed"
-	    echo "<path-var> defaults to PATH"
-	    echo "Examples: cleanpath (cleans PATH)"
-	    echo "          cleanpath -N (shows doubled entries in PATH)"
-	    echo "          cleanpath MANPATH (cleans MANPATH)"
-	    echo "          cleanpath -T LD_LIBRARY_PATH LD_RUN_PATH"
-	    echo
-	    echo 'Removes redundant entries from a given list of path variables'
-	    echo '(default=PATH). The -T flag causes entries which do not exist'
-	    echo 'to be removed as well, and -V prints any entries removed.'
-	    echo 'The -N flag shows what would be done without doing anything.'
-	    return 1
-	    ;;
-	 ([N]) nmode=1 verbose=1 ;;
-	 ([V]) verbose=1 ;;
-	 ([T]) testdirs=1 ;;
-      esac
-   done
-   shift $((OPTIND-1))
+    typeset entry oldifs pth_var old_path new_path prev testdirs
+    typeset nmode verbose flag
+    OPTIND=1
+    while getopts "HhNTV" flag; do
+        case $flag in
+            ([Hh]|\?)
+                exec 1>&2
+                echo "Usage: cleanpath [-NTV] [<path-var> ...]"
+                echo "cleanpath -N doesn't actually change anything"
+                echo "cleanpath -T also removes entries which don't exist"
+                echo "cleanpath -V shows entries removed"
+                echo "<path-var> defaults to PATH"
+                echo "Examples: cleanpath (cleans PATH)"
+                echo "          cleanpath -N (shows doubled entries in PATH)"
+                echo "          cleanpath MANPATH (cleans MANPATH)"
+                echo "          cleanpath -T LD_LIBRARY_PATH LD_RUN_PATH"
+                echo
+                echo 'Removes redundant entries from a given list of path variables'
+                echo '(default=PATH). The -T flag causes entries which do not exist'
+                echo 'to be removed as well, and -V prints any entries removed.'
+                echo 'The -N flag shows what would be done without doing anything.'
+                return 1
+                ;;
+            ([N]) nmode=1 verbose=1 ;;
+            ([V]) verbose=1 ;;
+            ([T]) testdirs=1 ;;
+        esac
+    done
+    shift $((OPTIND-1))
 
-   # Loop through specified path variables, defaulting to PATH.
-   for pth_var in ${*:-PATH}; do
-      # Set a temp var to current path value.
-      # Add artificial leading and trailing colons for regularity of syntax.
-      eval old_path=:\$$pth_var:
-      # Skip paths which are unset
-      [[ "$old_path" = "::" ]] && continue
-      # Turn all instances of "::" into ":.:".
-      while [[ "$old_path" = *::* ]]; do
-	 old_path=${old_path%%::*}:.:${old_path#*::}
-      done
-      # Place the entries in old_path into $*
-      oldifs="$IFS"
-      IFS=:
-      set -- $old_path
-      IFS=$oldifs
-      # Now walk through $@, placing all previously-unseen entries back
-      # into the new path variable. We remember each entry on the 'seen'
-      # list as we encounter it for subsequent rejection. If testdirs
-      # is set, we remove entries if they don't exist as directories.
-      if [[ -n "$BASH_VERSION" ]]; then
-	  declare -a seen
-      else
-	  set -A seen
-      fi
-      unset new_path
-      for entry in "$@"; do
-	 for prev in "${seen[@]}"; do
-	    if [[ "$entry" = "$prev" ]]; then
-	       if [[ -n "$verbose" ]]; then
-		  echo 1>&2 "Removing redundant entry: $entry"
-	       fi
-	       continue 2
-	    fi
-	 done
-	 seen[${#seen[@]}]=$entry
-	 if [[ -n "$testdirs" && ! -a $entry ]]; then
-	    if [[ -n "$verbose" ]]; then
-	       echo 1>&2 "Removing nonexistent entry: $entry"
-	    fi
-	    continue
-	 fi
-	 new_path="${new_path:+$new_path:}$entry"
-      done
-      unset seen entry prev
-      # Now set the real variable back to the modified temp value.
-      if [[ -z "$nmode" ]]; then
-	 eval "$pth_var='$new_path'"
-      fi
-   done
+    # Loop through specified path variables, defaulting to PATH.
+    for pth_var in ${*:-PATH}; do
+        # Set a temp var to current path value.
+        # Add artificial leading and trailing colons for regularity of syntax.
+        eval old_path=:\$$pth_var:
+        # Skip paths which are unset
+        [[ "$old_path" = "::" ]] && continue
+        # Turn all instances of "::" into ":.:".
+        while [[ "$old_path" = *::* ]]; do
+            old_path=${old_path%%::*}:.:${old_path#*::}
+        done
+        # Place the entries in old_path into $*
+        oldifs="$IFS"
+        IFS=:
+        set -- $old_path
+        IFS=$oldifs
+        # Now walk through $@, placing all previously-unseen entries back
+        # into the new path variable. We remember each entry on the 'seen'
+        # list as we encounter it for subsequent rejection. If testdirs
+        # is set, we remove entries if they don't exist as directories.
+        if [[ -n "$BASH_VERSION" ]]; then
+            declare -a seen
+        else
+            set -A seen
+        fi
+        unset new_path
+        for entry in "$@"; do
+            for prev in "${seen[@]}"; do
+                if [[ "$entry" = "$prev" ]]; then
+                    if [[ -n "$verbose" ]]; then
+                        echo 1>&2 "Removing redundant entry: $entry"
+                    fi
+                    continue 2
+                fi
+            done
+            seen[${#seen[@]}]=$entry
+            if [[ -n "$testdirs" && ! -a $entry ]]; then
+                if [[ -n "$verbose" ]]; then
+                    echo 1>&2 "Removing nonexistent entry: $entry"
+                fi
+                continue
+            fi
+            new_path="${new_path:+$new_path:}$entry"
+        done
+        unset seen entry prev
+        # Now set the real variable back to the modified temp value.
+        # But if the result is a null value remove it entirely.
+        if [[ -z "$nmode" ]]; then
+            if [[ -n "$new_path" ]]; then
+                eval "$pth_var='$new_path'"
+            else
+                eval "unset $pth_var"
+            fi
+        fi
+    done
 }
 
 ##########################################################################
@@ -412,23 +422,26 @@ function listpath
 {
     typeset entry pth_var pth_tmp oldifs
     if [[ "$1" = -[Hh] ]]; then
-	exec 1>&2
-	echo "Usage: listpath [<path-var>]"
-	echo
-	echo 'Prints the entries of the specified path variable (default: PATH)'
-	echo 'to stdout, one per line.'
-	return 1
+        exec 1>&2
+        echo "Usage: listpath [<path-var>]"
+        echo
+        echo 'Prints the entries of the specified path variable (default: PATH)'
+        echo 'to stdout, one per line.'
+        return 1
     fi
     pth_var=${1:-PATH}
     eval pth_tmp=\$$pth_var
     oldifs="$IFS"
     IFS=:
     for entry in $pth_tmp; do
-	echo "${entry:-.}"
+        echo "${entry:-.}"
     done
     IFS=$oldifs
     if [[ "$pth_tmp" = *: ]]; then
-	echo "."
+        echo "."
     fi
 }
 function path { listpath "$@"; }
+
+# Keep tabs out since human users can't agree on tabstops.
+# vim: filetype=sh:sw=4:et:

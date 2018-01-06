@@ -8,7 +8,7 @@
 
 function _ps1_dirs {
     if [[ "${#DIRSTACK[@]}" > 1 ]]; then
-	echo -n "[$((${#DIRSTACK[@]} - 1))]"
+        echo -n "[$((${#DIRSTACK[@]} - 1))]"
     fi
     return $1 # preserve original $?
 }
@@ -17,9 +17,9 @@ function _ps1_dirs {
 function _ps1_cwd {
     typeset _trim=${PWD%/*/*/*}
     if [[ "$_trim" == "$PWD" ]]; then
-	typeset _dir=$PWD
+        typeset _dir=$PWD
     else
-	typeset _dir=${PWD/$_trim/...}
+        typeset _dir=${PWD/$_trim/...}
     fi
     echo -n ${_dir/$HOME/'~'}
     return $1 # preserve original $?
@@ -27,26 +27,29 @@ function _ps1_cwd {
 
 function _ps1 {
     if [[ "$BASH_VERSION" == [123]* ]]; then
-	if [[ "$1" == col* ]]; then
-	    echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) \[\033[01;31m\]$?\[\033[00m\] \#% '
-	else
-	    echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) $? \#% '
-	fi
+        if [[ "$1" == col* ]]; then
+            echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) \[\033[01;31m\]$?\[\033[00m\] \#% '
+        else
+            echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) $? \#% '
+        fi
     else
-	if [[ "$1" == col* ]]; then
-	    echo -n '\u@\h $(_ps1_dirs $?)\w \[\033[01;31m\]$?\[\033[00m\] \#% '
-	else
-	    echo -n '\u@\h $(_ps1_dirs $?)\w $? \#% '
-	fi
+        if [[ "$1" == col* ]]; then
+            echo -n '\u@\h $(_ps1_dirs $?)\w \[\033[01;31m\]$?\[\033[00m\] \#% '
+        else
+            echo -n '\u@\h $(_ps1_dirs $?)\w $? \#% '
+        fi
     fi
 }
 
 function ps1 {
     if [[ "$1" == demo* ]]; then
-	PS1='\n% '
+        PS1='\n% '
     else
-	eval PS1='$(_ps1 $1)'
+        eval PS1='$(_ps1 $1)'
     fi
 }
 
 PROMPT_DIRTRIM=${PROMPT_DIRTRIM:-3}
+
+# Keep tabs out since human users can't agree on tabstops.
+# vim: filetype=sh:sw=4:et:

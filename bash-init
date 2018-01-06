@@ -35,34 +35,34 @@ export BASHRC=${BASH_SOURCE[0]%/*}
 if [[ "$*" == *-user=* ]]; then
     # Source standard/versioned config files of specified user.
     for arg in "$@"; do
-	if [[ $arg == -user=* ]]; then
-	    eval ${arg#-}
-	    break
-	fi
+        if [[ $arg == -user=* ]]; then
+            eval ${arg#-}
+            break
+        fi
     done
     topshell=$BASHRC/USERS/$user/topshell
     pershell=$BASHRC/USERS/$user/pershell
     if [[ ! -f $topshell ]]; then
-	echo "Error: no init files in ${topshell%/*}" >&2
-	return 2
+        echo "Error: no init files in ${topshell%/*}" >&2
+        return 2
     fi
 else
     user=${BASHRC%/*}
     user=${user##*/}
     eval home=~$user
     if [[ "$home" = "~$user" ]]; then
-	user=${LOGNAME:=$(logname)}
-	eval home=~$user
+        user=${LOGNAME:=$(logname)}
+        eval home=~$user
     fi
     topshell=$home/.bash-topshell
     pershell=$home/.bash-pershell
     if [[ ! -f $topshell ]]; then
-	topshell=$HOME/.bash-topshell
-	pershell=$HOME/.bash-pershell
-	if [[ ! -f $topshell && -f $BASHRC/USERS/$user/topshell ]]; then
-	    topshell=$BASHRC/USERS/$user/topshell
-	    pershell=$BASHRC/USERS/$user/pershell
-	fi
+        topshell=$HOME/.bash-topshell
+        pershell=$HOME/.bash-pershell
+        if [[ ! -f $topshell && -f $BASHRC/USERS/$user/topshell ]]; then
+            topshell=$BASHRC/USERS/$user/topshell
+            pershell=$BASHRC/USERS/$user/pershell
+        fi
     fi
 fi
 
@@ -75,12 +75,12 @@ source $BASHRC/func/pathfuncs
 if [[ "$BASHRC_INIT" != *$user* || "$*" == *-force* ]]; then
     # Use "source $BASHRC/bash-init -reset" to force an initial PATH setting
     if [[ "$*" == *-reset* ]]; then
-	echo "$0: RESETTING ENVIRONMENT FOR $user IN $$ FROM $topshell" >&2
-	unset BASHRC_INIT
-	PATH=/bin:/usr/bin
-	[[ ! -r /etc/profile ]] || source /etc/profile
+        echo "$0: RESETTING ENVIRONMENT FOR $user IN $$ FROM $topshell" >&2
+        unset BASHRC_INIT
+        PATH=/bin:/usr/bin
+        [[ ! -r /etc/profile ]] || source /etc/profile
     elif [[ "$*" == *-debug* || "$user" != "$LOGNAME" ]]; then
-	echo "$0: ENVIRONMENT INITIALIZATION FOR $user IN $$ FROM $topshell" >&2
+        echo "$0: ENVIRONMENT INITIALIZATION FOR $user IN $$ FROM $topshell" >&2
     fi
     source $topshell
 
@@ -95,7 +95,7 @@ fi
 #####################################################################
 if [[ "$*" == *-pershell* && -f $pershell ]]; then
     if [[ "$*" == *-debug* || "$user" != "$LOGNAME" ]]; then
-	echo "$0: INTERACTIVE INITIALIZATION FOR $user IN $$ FROM $pershell" >&2
+        echo "$0: INTERACTIVE INITIALIZATION FOR $user IN $$ FROM $pershell" >&2
     fi
     source $pershell
 fi
@@ -109,3 +109,6 @@ alias pershell='source $BASHRC/USERS/$LOGNAME/pershell'
 [[ ! -x ~/.bash-verbose ]] || set +x
 
 : Ensure $? == 0 when this script ends.
+
+# Keep tabs out since human users can't agree on tabstops.
+# vim: filetype=sh:sw=4:et:

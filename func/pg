@@ -11,8 +11,11 @@
 
 function pg {
     if tty -s; then
-	"$@" | ${PAGER:-less};
+        "$@" | ${PAGER:-less};
     else
-	"$@"
+        "$@"
     fi
 }
+
+# Keep tabs out since human users can't agree on tabstops.
+# vim: filetype=sh:sw=4:et:

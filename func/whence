@@ -5,15 +5,18 @@ function whence
 {
     unset _flags
     for i in "$@"; do
-	case "$i" in
-	    -*) _flags=$i; continue ;;
-	esac
-	_whence=$(type $_flags -p "$i")
-	if [[ -n "$_whence" ]]; then
-	    echo $_whence
-	else
-	    type "$i"
-	fi
+        case "$i" in
+            -*) _flags=$i; continue ;;
+        esac
+        _whence=$(type $_flags -p "$i")
+        if [[ -n "$_whence" ]]; then
+            echo $_whence
+        else
+            type "$i"
+        fi
     done
     unset _whence _flags i
 }
+
+# Keep tabs out since human users can't agree on tabstops.
+# vim: filetype=sh:sw=4:et:

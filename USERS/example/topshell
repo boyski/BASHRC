@@ -4,3 +4,5 @@
 # made here or in pershell though the more "correct" location is here.
 
 export EDITOR=vi
+
+# vim: filetype=sh:sw=4:et:

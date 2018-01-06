@@ -11,3 +11,5 @@ source $BASHRC/func/ps1 && ps1
 # Useful functions.
 source $BASHRC/func/dirfuncs
 source $BASHRC/func/pg
+
+# vim: filetype=sh:sw=4:et:

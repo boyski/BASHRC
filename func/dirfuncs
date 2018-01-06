@@ -17,38 +17,38 @@ function cd
     # Allow cd-ing to a file (use its parent directory).
     typeset _tgt=${!#}
     if [[ $# > 0 && "$_tgt" != -* ]]; then
-	[[ "$_tgt" != http://* ]] || _tgt=/${_tgt#http://[a-zA-Z_-.]*/}
-	[[ ! -f "$_tgt" ]] || _tgt="${_tgt%/*}"
-	builtin cd "$_tgt"
+        [[ "$_tgt" != http://* ]] || _tgt=/${_tgt#http://[a-zA-Z_-.]*/}
+        [[ ! -f "$_tgt" ]] || _tgt="${_tgt%/*}"
+        builtin cd "$_tgt"
     else
-	builtin cd "$@"
+        builtin cd "$@"
     fi
 }
 
 function pushd
 {
     if [[ -n "$1" ]]; then
-	typeset _tgt=${1%/} _i; shift
-	# Allow pushd-ing to a URL on the assumption that the RHS is a local path.
-	[[ "$_tgt" != http://* ]] || _tgt=/${_tgt#http://[a-zA-Z_-.]*/}
-	# Allow pushd-ing to a file (use its parent directory).
-	[[ ! -f "$_tgt" ]] || _tgt="${_tgt%/*}"
-	typeset -i _i=${#DIRSTACK[@]}
-	while (( $_i > 0 )); do
-	    let _i--
-	    if [[ "${DIRSTACK[$_i]}" = "$_tgt" ]]; then
-		unset _tgt
-		break
-	    fi
-	done
-	if [[ -n "$_tgt" ]]; then
-	    set -- "$_tgt" "$@"
-	    builtin pushd "$@"
-	else
-	    builtin pushd +$_i
-	fi
+        typeset _tgt=${1%/} _i; shift
+        # Allow pushd-ing to a URL on the assumption that the RHS is a local path.
+        [[ "$_tgt" != http://* ]] || _tgt=/${_tgt#http://[a-zA-Z_-.]*/}
+        # Allow pushd-ing to a file (use its parent directory).
+        [[ ! -f "$_tgt" ]] || _tgt="${_tgt%/*}"
+        typeset -i _i=${#DIRSTACK[@]}
+        while (( $_i > 0 )); do
+            let _i--
+            if [[ "${DIRSTACK[$_i]}" = "$_tgt" ]]; then
+                unset _tgt
+                break
+            fi
+        done
+        if [[ -n "$_tgt" ]]; then
+            set -- "$_tgt" "$@"
+            builtin pushd "$@"
+        else
+            builtin pushd +$_i
+        fi
     else
-	builtin pushd
+        builtin pushd
     fi
     lwd=${DIRSTACK[1]}
 }
@@ -67,18 +67,21 @@ function dirs
     typeset -a _r _s
     typeset _dir _d _i=0 _n=${#DIRSTACK[@]}
     while [[ $_i < $_n ]]; do
-	eval _dir="${DIRSTACK[$_i]}"
-	for _d in "${_s[@]}"; do
-	    if [[ "$_dir" = "$_d" ]]; then
-		_r=($_i ${_r[@]})
-		break
-	    fi
-	done
-	_s=("${_s[@]}" $_dir)
-	let _i=_i+1
+        eval _dir="${DIRSTACK[$_i]}"
+        for _d in "${_s[@]}"; do
+            if [[ "$_dir" = "$_d" ]]; then
+                _r=($_i ${_r[@]})
+                break
+            fi
+        done
+        _s=("${_s[@]}" $_dir)
+        let _i=_i+1
     done
     for _i in "${_r[@]}"; do
-	popd +$_i >/dev/null
+        popd +$_i >/dev/null
     done
     builtin dirs "$@"
 }
+
+# Keep tabs out since human users can't agree on tabstops.
+# vim: filetype=sh:sw=4:et:
