@@ -58,16 +58,16 @@ function _canonpath
 {
     typeset _var _val
     for _var in "$@"; do
-        eval _val=\$$_var
+        eval _val="\$$_var"
         if [[ "$_val" != */* && "$_var" != */ ]]; then
             :
         elif [[ -d "$_val" ]]; then
             if [[ -x "$_val" ]]; then
-                cd "$_val" && cd "$OLDPWD" && eval $_var=$OLDPWD
+                cd "$_val" && cd "$OLDPWD" && eval $_var='$OLDPWD'
             fi
         elif [[ -f "$_val" ]]; then
-            typeset _dir=${_val%/*} _base=${_val##*/}
-            cd "$_dir" && cd "$OLDPWD" && eval $_var=$OLDPWD/$_base
+            typeset _dir="${_val%/*}" _base="${_val##*/}"
+            cd "$_dir" && cd "$OLDPWD" && eval $_var='$OLDPWD/$_base'
         fi
     done
 }
@@ -98,7 +98,7 @@ function offpath
     # Allow but ignore a flag here for consistency with onpath.
     [[ "$1" = -* ]] && shift
     # Set a temp var to current path value.
-    eval pth_tmp=\$$pth_var
+    eval pth_tmp="\$$pth_var"
     # Disambiguate leading/trailing colons
     [[ "$pth_tmp" != :* ]] || pth_tmp=".$pth_tmp"
     [[ "$pth_tmp" != *: ]] || pth_tmp="$pth_tmp."
@@ -180,16 +180,16 @@ function onpath
     done
     : ${action:=-F}
     # Remove all instances of the specified entries from the current path.
-    offpath $pth_var "$@"
+    offpath "$pth_var" "$@"
     # Set a temp var to current path value.
-    eval pth_tmp=\$$pth_var
+    eval pth_tmp="\$$pth_var"
     # Collect the specified entries into a colon-separated list.
     # If entry is a full file path, assume user meant its containing dir.
     for entry in "$@"; do
         [[ -z "$missing" || -a "$entry" ]] || continue
         _canonpath entry
         if [[ -a "$entry" && ! -d "$entry" && "$entry" != *.jar && "$entry" = /* ]]; then
-            entry=${entry%/*}
+            entry="${entry%/*}"
         fi
         entries="${entries:+$entries:}$entry"
     done
@@ -363,7 +363,7 @@ function cleanpath
     for pth_var in ${*:-PATH}; do
         # Set a temp var to current path value.
         # Add artificial leading and trailing colons for regularity of syntax.
-        eval old_path=:\$$pth_var:
+        eval old_path=":\$$pth_var:"
         # Skip paths which are unset
         [[ "$old_path" = "::" ]] && continue
         # Turn all instances of "::" into ":.:".
@@ -430,7 +430,7 @@ function listpath
         return 1
     fi
     pth_var=${1:-PATH}
-    eval pth_tmp=\$$pth_var
+    eval pth_tmp="\$$pth_var"
     oldifs="$IFS"
     IFS=:
     for entry in $pth_tmp; do
