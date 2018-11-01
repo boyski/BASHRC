@@ -43,7 +43,7 @@ function _ps1 {
 
 function ps1 {
     if [[ "$1" == demo* ]]; then
-        PS1='\n% '
+        PS1='\n\$ '
     else
         eval PS1='$(_ps1 $1)'
     fi
