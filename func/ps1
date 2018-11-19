@@ -26,17 +26,18 @@ function _ps1_cwd {
 }
 
 function _ps1 {
+    typeset pc='$'
     if [[ "$BASH_VERSION" == [123]* ]]; then
         if [[ "$1" == col* ]]; then
-            echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) \[\033[01;31m\]$?\[\033[00m\] \#% '
+            echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) \[\033[01;31m\]$?\[\033[00m\] \#'$pc' '
         else
-            echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) $? \#% '
+            echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) $? \#'$pc' '
         fi
     else
         if [[ "$1" == col* ]]; then
-            echo -n '\u@\h $(_ps1_dirs $?)\w \[\033[01;31m\]$?\[\033[00m\] \#% '
+            echo -n '\u@\h $(_ps1_dirs $?)\w \[\033[01;31m\]$?\[\033[00m\] \#'$pc' '
         else
-            echo -n '\u@\h $(_ps1_dirs $?)\w $? \#% '
+            echo -n '\u@\h $(_ps1_dirs $?)\w $? \#'$pc' '
         fi
     fi
 }

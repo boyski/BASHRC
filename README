@@ -10,7 +10,7 @@ bash config-file regime into something more straightforward and sensible
 This area comes with a USERS directory where user init files *may* be
 version controlled. There's no need or requirement to do so but it may
 make sense for important pseudo-users at least to keep their shell setup
-under version control in USERS. When this is done, all .bash* files
+under version control in USERS. When this is done, all ~/.bash* files
 in the home directory can be symlinks into $BASHRC/USERS/<username>.
 The same goes for any other config files you want to version: .vimrc,
 .gitconfig, .tmux.conf, etc.
@@ -57,18 +57,25 @@ it as follows:
     PATH=/usr/bin:$PATH bash -c "command"
 
 Unfortunately, with .bash_profile and .bashrc connected this PATH setting
-is ignored, because the shell will source .bashrc which restores the
+is ignored, because the shell may source .bashrc which restores the
 static setting before running the command, so you silently fail to get
 the updated version.
 
 All this confusion happens because bash makes the outdated distinction
 between "login" and interactive shells rather than between "top"
-and interactive shells.  The main point of the BASHRC framework is to
+and descendant shells.  The main point of the BASHRC framework is to
 change that. It combines the .bashrc/.profile files as discussed just
 above but then separates them back in a way which considers top-ness
 rather than login-ness. The net result is that ssh shells and shells
 within xterm-like windows tend to do what you expect, and overriding
 environment variables also works as expected.
+
+The "top shell", again, is the first shell in the process tree. This
+could be arrived at via a regular login, an ssh, a cron job, an xterm,
+etc. Almost every process tree has a shell at the top and this is the
+only one that should export environment variables. Any shell processes
+which are descended from the top shell will get its environment
+automatically and will want aliases etc only if interactive.
 
 #####################################################################
 # HOW TO USE
@@ -134,24 +141,23 @@ process belongs to a different userid (often a daemon such as sshd).
 
 The traditional .bash_profile/.bashrc init logic is routed through
 a single file called "bash-init". For top level shells this file
-will source the topshell file. For any interactive shell it also
+will source the topshell file. For any interactive shell it
 sources the pershell file. The net result is to translate the native
 .bash_profile/.bashrc split into our own topshell/pershell logic with
 slightly different, and better, semantics.
 
-The goal is that environment variables placed in topshell
-will be initialized to the same values for all top-level shells
-regardless of entry method, and that child processes are free
-to modify them without interference from their own descendant
-shells. Also, interactive settings (aliases, shell functions)
-placed in pershell will be the same for all interactive shells.
+The goal is that environment variables placed in topshell will be
+initialized to the same values for all top-level shells regardless of
+entry method (cron, ssh, login, etc), and that child processes are
+free to modify them without interference from their own descendant
+shells. Also, interactive settings (aliases, shell functions) placed
+in pershell will be the same for all interactive shells.
 
-The umask is a special case. Though it's not an environment variable
-it is inherited by child processes so it behaves much like one.
-However, since we don't want user A to get stuck with user B's
-umask when switching to user B's environment, it should be set in
-pershell. This causes it to be set redundantly but that does
-no harm.
+The umask is a special case. Though it's not an environment variable it
+is inherited by child processes so it behaves much like one.  However,
+since we don't want user A to get stuck with user B's umask when
+switching to user B's environment, it's best set in pershell. This
+causes it to be set redundantly but that does no harm.
 
 #####################################################################
 # DO NOT SET BASH_ENV IN CONFIG FILES
