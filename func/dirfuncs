@@ -25,6 +25,29 @@ function cd
     fi
 }
 
+function _uniqify_dirs
+{
+    # Remove accidental redundancies from dir stack. This can
+    # happen via e.g. "pushd /var; pushd /var/tmp; cd ..".
+    # Bash doesn't allow direct modification of DIRSTACK.
+    typeset -a _r _s
+    typeset _dir _d _i=0 _n=${#DIRSTACK[@]}
+    while [[ $_i < $_n ]]; do
+        eval _dir="${DIRSTACK[$_i]}"
+        for _d in "${_s[@]}"; do
+            if [[ "$_dir" = "$_d" ]]; then
+                _r=($_i ${_r[@]})
+                break
+            fi
+        done
+        _s=("${_s[@]}" $_dir)
+        let _i=_i+1
+    done
+    for _i in "${_r[@]}"; do
+        popd +$_i >/dev/null
+    done
+}
+
 function pushd
 {
     if [[ -n "$1" ]]; then
@@ -50,36 +73,20 @@ function pushd
     else
         builtin pushd
     fi
+    _uniqify_dirs "$@"
     lwd=${DIRSTACK[1]}
 }
 
 function popd
 {
     builtin popd "$@"
+    _uniqify_dirs "$@"
     lwd=${DIRSTACK[1]}
 }
 
 function dirs
 {
-    # Remove accidental redundancies from dir stack. This can
-    # happen via e.g. "pushd /var; pushd /var/tmp; cd ..".
-    # Bash doesn't allow direct modification of DIRSTACK.
-    typeset -a _r _s
-    typeset _dir _d _i=0 _n=${#DIRSTACK[@]}
-    while [[ $_i < $_n ]]; do
-        eval _dir="${DIRSTACK[$_i]}"
-        for _d in "${_s[@]}"; do
-            if [[ "$_dir" = "$_d" ]]; then
-                _r=($_i ${_r[@]})
-                break
-            fi
-        done
-        _s=("${_s[@]}" $_dir)
-        let _i=_i+1
-    done
-    for _i in "${_r[@]}"; do
-        popd +$_i >/dev/null
-    done
+    _uniqify_dirs "$@"
     builtin dirs "$@"
 }
 
