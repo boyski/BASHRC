@@ -30,7 +30,7 @@ export BASHRC=${BASH_SOURCE[0]%/*}
 [[ ! -f ${BASHRC?} ]] || BASHRC=.
 
 # Find the config files to be sourced. The point here is to
-# allow anbody's config files to be sourced, not just our own.
+# allow anybody's config files to be sourced, not just our own.
 # Anybody using the BASHRC system, that is.
 if [[ "$*" == *-user=* ]]; then
     # Source standard/versioned config files of specified user.
