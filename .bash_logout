@@ -20,3 +20,10 @@ if [[ -n "$BASHRC" ]]; then
 	[[ ! -s $check ]] || echo days=$days > $check
     fi
 fi
+
+# Retain shell history data for a while if we're keeping it in memory.
+if [[ -d ~/.bash_history && -w ~/.bash_history ]]; then
+    find ~/.bash_history ! -mtime -10 -type f -exec rm -f {} +
+    echo "#$(pwd)" > ~/.bash_history/history.$$
+    history >> ~/.bash_history/history.$$
+fi
