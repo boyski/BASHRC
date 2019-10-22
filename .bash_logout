@@ -27,3 +27,11 @@ if [[ -d ~/.bash_history && -w ~/.bash_history ]]; then
     echo "#$(pwd)" > ~/.bash_history/history.$$
     history >> ~/.bash_history/history.$$
 fi
+
+# Protection in case permissions required for ssh get messed up.
+if [[ -d ~/.ssh ]]; then
+    chmod go-w ~
+    chmod 700 ~/.ssh/
+    chmod 600 ~/.ssh/{authorized_keys,config,id_?sa}
+    chmod 644 ~/.ssh/id_?sa.pub
+fi
