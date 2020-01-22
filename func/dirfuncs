@@ -10,7 +10,9 @@
 # 2. It allows you to say "pushd <filename>" which will pushd to
 #    "$(dirname <filename>)". Same for "cd <filename>".
 # 3. It will not push a dir to the stack that's already in the stack.
-#    Pushing to a dir already on the stack just moves it to the top.
+#    Pushing to a dir already on the stack rotates it to the top.
+# 4. You can push "up" a certain number of levels with "pushd ^n".
+#    I.e. "pushd ^4" is a synonym for "pushd ../../../..".
 
 function cd
 {
@@ -51,7 +53,7 @@ function _uniqify_dirs
 function pushd
 {
     if [[ -n "$1" ]]; then
-        typeset _tgt=${1%/} _i; shift
+        typeset _tgt=${1%/}; shift
         # Allow pushd-ing to a URL on the assumption that the RHS is a local path.
         [[ "$_tgt" != http://* ]] || _tgt=/${_tgt#http://[a-zA-Z_-.]*/}
         # Allow pushd-ing to a file (use its parent directory).
@@ -65,8 +67,18 @@ function pushd
             fi
         done
         if [[ -n "$_tgt" ]]; then
-            set -- "$_tgt" "$@"
-            builtin pushd "$@"
+            if [[ "$_tgt" = ^[1-9] ]]; then
+                typeset _dots=
+                typeset -i _i=${_tgt/^/}
+                while (( $_i > 0 )); do
+                    let _i--
+                    _dots=${_dots}../
+                done
+                builtin pushd ${_dots%/}
+            else
+                set -- "$_tgt" "$@"
+                builtin pushd "$@"
+            fi
         else
             builtin pushd +$_i
         fi
