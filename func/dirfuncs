@@ -2,7 +2,7 @@
 
 # Written by David Boyce ~1995 and placed in the public domain.
 
-# Minor enhancements to bash's builtin pushd/popd/dirs implementation
+# Convenience enhancements to bash's builtin pushd/popd/dirs implementation
 # including the following added features:
 #
 # 1. This version allows you to access the first stacked directory using
@@ -11,7 +11,7 @@
 #    "$(dirname <filename>)". Same for "cd <filename>".
 # 3. It will not push a dir to the stack that's already in the stack.
 #    Pushing to a dir already on the stack rotates it to the top.
-# 4. You can push "up" a certain number of levels with "pushd ^n".
+# 4. It can push "up" a certain number of levels with "pushd ^n".
 #    I.e. "pushd ^4" is a synonym for "pushd ../../../..".
 
 function cd
@@ -20,7 +20,7 @@ function cd
     typeset _tgt=${!#}
     if [[ $# > 0 && "$_tgt" != -* ]]; then
         [[ "$_tgt" != http://* ]] || _tgt=/${_tgt#http://[a-zA-Z_-.]*/}
-        [[ ! -f "$_tgt" ]] || _tgt="${_tgt%/*}"
+        if [[ -f "$_tgt" || -L "$_tgt" ]]; then _tgt="${_tgt%/*}"; fi
         builtin cd "$_tgt"
     else
         builtin cd "$@"
@@ -57,7 +57,7 @@ function pushd
         # Allow pushd-ing to a URL on the assumption that the RHS is a local path.
         [[ "$_tgt" != http://* ]] || _tgt=/${_tgt#http://[a-zA-Z_-.]*/}
         # Allow pushd-ing to a file (use its parent directory).
-        [[ ! -f "$_tgt" ]] || _tgt="${_tgt%/*}"
+        if [[ -f "$_tgt" || -L "$_tgt" ]]; then _tgt="${_tgt%/*}"; fi
         typeset -i _i=${#DIRSTACK[@]}
         while (( $_i > 0 )); do
             let _i--
