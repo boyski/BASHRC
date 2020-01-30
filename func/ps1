@@ -43,8 +43,11 @@ function _ps1 {
 }
 
 function ps1 {
+    # Allow a special "PS1X" override variable to take precedence.
     if [[ "$1" == demo* ]]; then
         PS1='\n\$ '
+    elif [[ -n "$PS1X" ]]; then
+        PS1=$PS1X
     else
         eval PS1='$(_ps1 $1)'
     fi
