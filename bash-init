@@ -102,8 +102,9 @@ fi
 
 unset topshell pershell user home
 
-# Useful for updating active shells after tweaking pershell file.
+# Useful for updating active shells after tweaking config files.
 alias pershell='source $BASHRC/USERS/$LOGNAME/pershell'
+alias topshell='source $BASHRC/USERS/$LOGNAME/topshell'
 
 # Debugging aid undo.
 [[ ! -x ~/.bash-verbose ]] || set +x
