@@ -4,7 +4,7 @@ set redraw
 set report=1
 set shell=/bin/bash
 set showmatch
-"
+
 " More personal preference:
 set autowrite
 " set expandtab
@@ -14,35 +14,42 @@ set shortmess+=r
 set tabstop=8
 syntax off
 set nohlsearch
-"
+
 set smartindent
 filetype plugin indent on
-"
+
 " Avoids a screwy "feature" added in VIM 7.
 let loaded_matchparen = 1
-"
+
 " Request no sounds.
 set vb t_vb=
-"
+
+" Prefer unix line endings.
 set ff=unix
-"
+
 " Bind the + key to a macro which reformats the current text paragraph.
 map + {!}fmt -w 74}
-"
+
 " Let the user set shiftwidth to 'n' by typing '*n'.
 map *2 :set sw=2
 map *3 :set sw=3
 map *4 :set sw=4
 map *8 :set sw=8
-"
-" Bind Q to W, since the only reason I know of for hitting Q is a
-" finger fumble while trying to hit W.
-map Q W
-"
-":map <F5> V%zf
-"
+
+" A more convenient way to skip to the next file than ":n".
+map Q :n
+
 " Bind *Q to a macro which quotes the text by prepending "> ".
 "map *Q :.,$s?^?> ?
 
+" Aid in python debugging.
 let @P = 'Oimport pdb; pdb.set_trace()'
-let @N = 'Oimport nose.tools; nose.tools.set_trace()'
+
+" Remove trailing whitespace and blank lines before writing.
+function TrimTrailingBlanks()
+    let save_cursor = getpos(".")
+    silent! :%s/\s\+$//e
+    silent! %s#\($\n\s*\)\+\%$##
+    call setpos('.', save_cursor)
+endfunction
+autocmd BufWritePre * call TrimTrailingBlanks()

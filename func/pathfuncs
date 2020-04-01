@@ -13,7 +13,7 @@
 # time. Also, note that path vars do not need to be exported but they
 # usually are; these functions assume they should be exported though this
 # can be suppressed with the -E option. Last, we assume all path variable
-# names match /[A-Z]*PATH$/. This allows shorthand such as "onpath bin"
+# names match *PATH*. This allows shorthand such as "onpath bin"
 # by eliminating confusion over whether 'bin' is a pathvar or a path.
 
 # The offpath() function removes all instances of the specified entry(s)
@@ -88,9 +88,9 @@ function offpath
         echo "The -F and -B flags are allowed for consistency but have no effect."
         return 1
     fi
-    # Assumption: path variable names match [A-Z]*PATH.
+    # Assumption: path variable names match *PATH*.
     # If first arg doesn't fit assumption, use PATH.
-    if [[ "$1" == [[:upper:]]*ATH ]]; then
+    if [[ "$1" == *PATH* ]]; then
         pth_var=$1; shift
     else
         pth_var=PATH
@@ -162,9 +162,9 @@ function onpath
         echo 'Use "offpath" to remove entries.'
         return 1
     fi
-    # Assumption: path variable names match [A-Z]*PATH.
+    # Assumption: path variable names match *PATH*.
     # If first arg doesn't fit assumption, use PATH.
-    if [[ "$1" == [[:upper:]]*ATH ]]; then
+    if [[ "$1" == *PATH* ]]; then
         pth_var=$1; shift
     else
         pth_var=PATH
