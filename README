@@ -5,77 +5,69 @@
 This is a shared framework for handling bash init files. It doesn't
 provide any particular settings itself, it merely translates the standard
 bash config-file regime into something more straightforward and sensible
-(see below for details).
+(see below for details). Note that this framework and documentation
+ignore shells other than bash, and the words "shell" and "bash" are
+used synonymously below.
 
 This area comes with a USERS directory where user init files *may* be
 version controlled. There's no need or requirement to do so but it may
-make sense for important pseudo-users at least to keep their shell setup
-under version control in USERS. When this is done, all ~/.bash* files
+make sense, at least for important pseudo-users, to keep their shell
+config under version control. When this is done, all ~/.bash* files
 in the home directory can be symlinks into $BASHRC/USERS/<username>.
 The same goes for any other config files you want to version: .vimrc,
 .gitconfig, .tmux.conf, etc.
-#
+
 #####################################################################
 # SUMMARY
 #####################################################################
 
-The short summary is that bash configuration gets channeled through two
-files called "topshell" and "pershell". The topshell is sourced (read)
-by the first (top) shell in your process tree, pershell is sourced by
-all interactive shells within that process tree, and non-interactive
-non-top shells do not source either one. For the long version, read on.
+Short version is that bash configuration is channeled by this framework
+through two files called "topshell" and "pershell". Conceptually they
+replace the standard bash config files .bash_profile and .bashrc.
+The topshell is sourced (read) by the first (aka top) shell in your
+process tree, pershell is sourced by all interactive shells within that
+process tree, and non-interactive non-top shells don't source either
+one. For the long version, read on.
 
 #####################################################################
 # HOW IS THIS BETTER?
 #####################################################################
 
-Consider the most common scenario in which the standard model
-breaks down: "ssh hostname command ...". The design of the
+Consider the most common scenario in which the standard bash
+model breaks down: "ssh hostname command ...". The design of the
 .bash_profile/.bashrc system intends that environment variables should
 be set in .bash_profile. But since the ssh shell isn't a login shell
-it isn't read so PATH isn't set right and the command fails. Fine,
-you say, I'll put my EV settings in .bashrc instead and ssh will work,
-since the ssh shell does source .bashrc. But then a regular login shell
-will NOT get these settings because a login shell doesn't read .bashrc!
+.bash_profile isn't sourced so PATH isn't set right and the command
+fails. Fine, you say, I'll put my EV settings in .bashrc instead and ssh
+will work, since the ssh shell does source .bashrc. But then a regular
+login shell will NOT get these settings because a login shell doesn't
+read .bashrc!
 
-All right, you say, instead I'll combine the two files by symlinking
-them together or having one explicitly source the other. This is a very
-common "solution" which mostly works but it still has some annoying
-corner cases. In particular there's the problem of how to modify
-PATH. If you change it cumulatively as in "PATH=$PATH:foo:bar",
-which is usually what we want, that will happen for each layered
-shell and PATH will grow without bound i.e. potentially ending with
-foo:bar:foo:bar:foo:bar:foo:bar:... which is ugly and has even been
-known to break things.
+All right, you say, instead I'll combine the two files by symlinking them
+together or having one explicitly source the other. This is a very common
+"solution" which mostly works but it still has some annoying corner
+cases. In particular there's the problem of how to modify PATH. If you
+change it cumulatively as in "PATH=$PATH:foo:bar" that will happen for
+each layered shell and PATH will grow without bound i.e. potentially
+ending with foo:bar:foo:bar:foo:bar:foo:bar:... which is ugly and has
+even been known to break things if it grows too far.
 
-That problem could be worked around by setting PATH to a static value
-e.g. "PATH=foo:bar:baz" but that can lead to mysterious bugs. Imagine
-that your PATH contains "...:/tools/bin:/usr/bin:..." but for one
-particular command you need /usr/bin to take precedence. So you run
-it as follows:
+This confusion happens because bash makes the outdated distinction
+between "login" and interactive shells rather than between "top" and
+descendant shells.  A "top shell" is the first shell in a process
+tree. This could be arrived at via a regular login, an ssh, a cron
+job, an xterm, etc. Almost every process tree has a shell near its
+top and that shell is the only one that needs to export environment
+variables. Shell processes, or really any processes, descended from
+the top shell will inherit their environment automatically. Descendant
+shells want aliases etc only if interactive.
 
-    PATH=/usr/bin:$PATH bash -c "command"
-
-Unfortunately, with .bash_profile and .bashrc connected this PATH setting
-is ignored, because the shell may source .bashrc which restores the
-static setting before running the command, so you silently fail to get
-the updated version.
-
-All this confusion happens because bash makes the outdated distinction
-between "login" and interactive shells rather than between "top"
-and descendant shells.  The main point of the BASHRC framework is to
-change that. It combines the .bashrc/.profile files as discussed just
-above but then separates them back in a way which considers top-ness
-rather than login-ness. The net result is that ssh shells and shells
-within xterm-like windows tend to do what you expect, and overriding
-environment variables also works as expected.
-
-The "top shell", again, is the first shell in the process tree. This
-could be arrived at via a regular login, an ssh, a cron job, an xterm,
-etc. Almost every process tree has a shell at the top and this is the
-only one that should export environment variables. Any shell processes
-which are descended from the top shell will get its environment
-automatically and will want aliases etc only if interactive.
+The main point of the BASHRC framework is to change the paradigm from
+login/interactive to top/descendant. It combines the .bashrc/.profile
+files as discussed above but then separates them back in a way which
+considers top-ness rather than login-ness. The net result is that ssh
+shells and shells within xterm-like windows tend to do what you expect,
+and overriding environment variables also works as expected.
 
 #####################################################################
 # HOW TO USE
@@ -86,10 +78,10 @@ There are two variant ways to use this framework:
 1. You want to version your config files within it.  In this
 case, create the two files .../BASHRC/USERS/$LOGNAME/topshell and
 .../BASHRC/USERS/$LOGNAME/pershell and distribute your existing shell
-settings between them. Generally, settings that will be inherited by
-child shells (primarily environment variables) belong in topshell while
-other everything else (aliases and so on) goes in pershell.These files
-should then be committed to svn.  Then, remove existing ~/.bashrc and
+settings between them. Generally, settings that will be inherited
+by child shells (primarily environment variables) belong in topshell
+while everything else (aliases and so on) goes in pershell.These files
+should then be committed to svn.  Then, move aside existing ~/.bashrc and
 ~/.bash_profile files and symlink them both to BASHRC/.bash_profile. In
 a command line:
 
@@ -106,13 +98,41 @@ and potentially private, depending on permissions, but you lose
 the benefits of version control.
 
 In either case, make sure you have a second shell prompt sitting around
-unused while doing this work. If you break something so badly you can't
-log in any more, that stable login can be used to undo the damage. This
-is a good idea whenever working on shell config files.
+unused while working on these files. If you break something so badly
+you can't log in any more, that stable login can be used to undo the
+damage. This is a good idea whenever working on shell config files.
 
 #####################################################################
 # THEORY OF OPERATION
 #####################################################################
+
+Consider the way Unix works: at bootup the first process created is the
+"init" process which always has pid=1. Every other process descends from
+that and is thus, by definition, part of a process tree rooted at pid 1.
+
+It follows that any shell (bash) process is either the first shell
+in the process tree (closest to the root) or has an ancestor shell.
+This is the distinction bash is trying to get at with its .bashrc
+and .bash_profile files because it's assuming that first shell in the
+process tree must be a login shell. That was true in the old days but
+no longer. There are at least 3 ways a shell can be the first shell
+in its process tree without being a login shell:
+
+    1. Most commonly, via ssh. A command like "ssh hostname" does
+       a complete login but "ssh hostname <command>" does not. It
+       creates a non-shell runs the command within it.
+
+    2. A cron job. When a shell is descended from the cron daemon no
+       login is involved.
+
+    3. An xterm or equivalent. Due to the way windowing systems work an
+       xterm shell may not be a login shell or the descendant of one.
+
+The distinction between the first and descendant shells is what bash is
+trying to get at with its .bash_profile and .bashrc files; .bash_profile
+is used only for login shells while .bashrc is read only for interactive
+non-login shells. But as we've seen there are ways for a shell to be
+the first one without being a login shell.
 
 Bash reads *only* from ~/.bash_profile (or a couple of fallback
 names but let's ignore those) when it's a login shell, *only* from
@@ -132,19 +152,28 @@ subverted by a few technologies such as rsh/ssh, cron, and X11. All of
 these allow a shell to be spawned without ever being the descendant of
 a classic login shell.
 
-Our solution is first to define the notion of a "top-level shell".
+The solution here is first to define the notion of a "top-level shell".
 This is the same concept as a login shell but takes account of the
 possibility that no login may actually be involved. A top-level shell
 is defined as one which is not the descendant of a login shell or
 a top-level shell. In practice it's generally a shell whose parent
 process belongs to a different userid (often a daemon such as sshd).
 
-The traditional .bash_profile/.bashrc init logic is routed through
-a single file called "bash-init". For top level shells this file
-will source the topshell file. For any interactive shell it
-sources the pershell file. The net result is to translate the native
-.bash_profile/.bashrc split into our own topshell/pershell logic with
-slightly different, and better, semantics.
+In the BASHRC system the traditional .bash_profile/.bashrc init logic
+is routed through a single file called "bash-init" by making them both
+symlinks to it:
+
+    $ ls -ld .bash_profile .bashrc
+    lrwxrwxrwx 1 db936042 users 20 Apr 11  2017 .bash_profile -> BASHRC/.bash_profile
+    lrwxrwxrwx 1 db936042 users 20 Aug  5  2020 .bashrc -> BASHRC/.bash_profile
+
+The logic is channeled together but then split apart again with slightly
+different semantics: for top-level shells this file will source the
+topshell file, and for any interactive shell it sources the pershell
+file. Of course a top-level shell may also be interactice.  The net
+result is to translate the native .bash_profile/.bashrc split into
+our own topshell/pershell logic with slightly different, and improved,
+semantics.
 
 The goal is that environment variables placed in topshell will be
 initialized to the same values for all top-level shells regardless of
@@ -152,12 +181,6 @@ entry method (cron, ssh, login, etc), and that child processes are
 free to modify them without interference from their own descendant
 shells. Also, interactive settings (aliases, shell functions) placed
 in pershell will be the same for all interactive shells.
-
-The umask is a special case. Though it's not an environment variable it
-is inherited by child processes so it behaves much like one.  However,
-since we don't want user A to get stuck with user B's umask when
-switching to user B's environment, it's best set in pershell. This
-causes it to be set redundantly but that does no harm.
 
 #####################################################################
 # DO NOT SET BASH_ENV IN CONFIG FILES

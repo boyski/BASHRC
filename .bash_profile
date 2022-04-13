@@ -11,3 +11,5 @@
 #####################################################################
 
 source ${BASH_SOURCE[0]%/*}/BASHRC/bash-init -pershell "$@"
+
+# vim: filetype=sh:sw=4:et:readonly

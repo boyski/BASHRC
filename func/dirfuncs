@@ -5,14 +5,18 @@
 # Convenience enhancements to bash's builtin pushd/popd/dirs implementation
 # including the following added features:
 #
-# 1. This version allows you to access the first stacked directory using
-#    $lwd ("last working directory") as a shorthand for ${DIRSTACK[1]}.
+# 1. This version allows accessing the first stacked directory as $lwd
+#    ("last working directory") as a shorthand for ${DIRSTACK[1]}.
 # 2. It allows you to say "cd <filename>" or "pushd <filename>" to go
-#    to "$(dirname <filename>)". Makes copy/paste of paths easier.
+#    to "$(dirname <filename>)". This makes copy/paste of paths easier.
 # 3. It will not push a dir to the stack that's already in the stack.
 #    Pushing to a dir already on the stack rotates it to the top.
-# 4. It can move "up" a certain number of levels with "pushd ^n" or "cd ^n".
-#    I.e. "pushd ^4" is a synonym for "pushd ../../../..".
+# 4. Use of "dirs" will remove accidental redundancies from the dir stack.
+#    This can happen via e.g. "pushd /var; pushd /var/tmp; cd ..".
+# 5. It can move "up" a certain number of levels with "pushd ^n" or "cd ^n".
+#    I.e. "cd ^4" is a synonym for "cd ../../../.." and similarly
+#    "cd ^3/foo/bar" is equivalent to "cd ../../../foo/bar".
+#    Pushd has the same feature.
 
 function cd
 {
@@ -25,15 +29,16 @@ function cd
         if [[ -f "$_tgt" || ( -L "$_tgt" && ! -e "$_tgt" ) ]]; then
             _tgt="${_tgt%/*}"
         fi
-        # Allow ^n to mean "n parent directories".
-        if [[ "$_tgt" = ^[1-9] ]]; then
+        # Allow ^n to mean "up n parent directories".
+        if [[ "$_tgt" = ^[1-9]* ]]; then
             typeset _dots=
-            typeset -i _i=${_tgt/^/}
+            typeset _up_n=${_tgt%%/*}
+            typeset -i _i=${_up_n/\^/}
             while (( $_i > 0 )); do
                 let _i--
                 _dots=${_dots}../
             done
-            _tgt=${_dots%/}
+            _tgt=${_tgt/$_up_n/$_dots}
         fi
         builtin cd "$_tgt"
     else
@@ -83,15 +88,16 @@ function pushd
             fi
         done
         if [[ -n "$_tgt" ]]; then
-            # Allow ^n to mean "n parent directories".
-            if [[ "$_tgt" = ^[1-9] ]]; then
+            # Allow ^n to mean "up n parent directories".
+            if [[ "$_tgt" = ^[1-9]* ]]; then
                 typeset _dots=
-                typeset -i _i=${_tgt/^/}
+                typeset _up_n=${_tgt%%/*}
+                typeset -i _i=${_up_n/\^/}
                 while (( $_i > 0 )); do
                     let _i--
                     _dots=${_dots}../
                 done
-                builtin pushd ${_dots%/}
+                builtin pushd ${_tgt/$_up_n/$_dots}
             else
                 set -- "$_tgt" "$@"
                 builtin pushd "$@"

@@ -35,3 +35,5 @@ if [[ -d ~/.ssh ]]; then
     chmod 600 ~/.ssh/{authorized_keys,config,id_?sa}
     chmod 644 ~/.ssh/id_?sa.pub
 fi
+
+# vim: filetype=sh:sw=4:et:

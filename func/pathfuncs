@@ -77,7 +77,7 @@ function _canonpath
 # We allow the -F and -B flags here for consistency but ignore them.
 function offpath
 {
-    typeset entry pth_var pth_tmp new_path elem
+    typeset entry pth_var pth_tmp new_path= elem
     if [[ $# -lt 1 || ( "$1" = -* && "$1" != -[FfBb]* ) ]]; then
         exec 1>&2
         echo "Usage:    offpath [<path-var>] entry ..."
@@ -135,7 +135,7 @@ function offpath
 
 function onpath
 {
-    typeset entry entries action pth_var pth_tmp mark missing
+    typeset entry entries= action pth_var pth_tmp mark= missing=
     typeset exportit=export
     if [[ $# -lt 1 || ( "$1" = -* && "$1" != -[FBQqRr]* ) ]]; then
         exec 1>&2
@@ -259,7 +259,7 @@ function onpath
 
 function pkguse
 {
-    typeset base flag abs rel quiet undo
+    typeset base flag abs rel quiet= undo=
     OPTIND=1
     while getopts ":HhQU" flag; do
         case $flag in
@@ -329,8 +329,8 @@ function pkguse
 
 function cleanpath
 {
-    typeset entry oldifs pth_var old_path new_path prev testdirs
-    typeset nmode verbose flag
+    typeset entry oldifs pth_var old_path new_path= prev testdirs=
+    typeset nmode= verbose= flag
     OPTIND=1
     while getopts "HhNTV" flag; do
         case $flag in
@@ -379,8 +379,8 @@ function cleanpath
         # into the new path variable. We remember each entry on the 'seen'
         # list as we encounter it for subsequent rejection. If testdirs
         # is set, we remove entries if they don't exist as directories.
-        if [[ -n "$BASH_VERSION" ]]; then
-            declare -a seen
+        if [[ -n "${BASH_VERSION-}" ]]; then
+            declare -a seen=
         else
             set -A seen
         fi

@@ -6,22 +6,25 @@
 # Self-referential environment settings like PATH=$PATH:/foo/bar must
 # go in topshell, aliases, functions, and unexported shell variables
 # belong in pershell, and non-self-referential environment settings
-# such as EDITOR=vim can go either place though topshell is preferred.
+# such as EDITOR=vim can go either place.
 # See the README in the same directory as this file for details.
 #####################################################################
 
 # Note: we try to use only bash builtins here (avoid fork/exec).
 
-if [[ "$*" == *-debug* ]]; then
-    function dbgmsg { echo "$0: =-= $@" >&2; }
-else
-    function dbgmsg { :; }
-fi
+# The "set -u" aka "nounset" option, which causes bash to abort
+# when an unset variable is evaluated, was found to be on at
+# entry in some configurations/platforms/shell variants.
+# This should never be on by default; presumably it was
+# left on by some earlier-sourced system config script.
+# Ensure it's always off to start with. Users may enable it
+# in their personal config files or scripts if so desired.
+set +u
 
 # Debugging aid.
-[[ ! -x ~/.bash-verbose ]] || set -x
+[[ -z "${BASH_VERBOSE-}" && ! -x ~/.bash-verbose ]] || set -x
 
-# This is normally not set, but if set must not be propagated!
+# This is normally not set, but if set must not be propagated.
 unset BASH_ENV
 
 # Cygwin doesn't, or at least at one time didn't, set LOGNAME.
@@ -31,54 +34,85 @@ export LOGNAME=${LOGNAME:-${USER:-$(logname)}}
 # allowed to leak into user environments. Red Hat bug, WAR here.
 unset module
 
+# Standard mode at entry unless some other request is made.
+test $# != 0 || set -- -pershell
+
 # Work out the location of the framework.
 export BASHRC=${BASH_SOURCE[0]%/*}
 [[ ! -f ${BASHRC?} ]] || BASHRC=.
 
-# If these aren't present in the home dir (as files or symlinks)
-# look for them in the versioned $BASHRC area.
-topshell=$HOME/.bash-topshell
-if [[ ! -f $topshell && -f $BASHRC/USERS/$LOGNAME/topshell ]]; then
-    topshell=$BASHRC/USERS/$LOGNAME/topshell
+# Find the config files to be sourced.
+user=${BASHRC%/*}
+user=${user##*/}
+eval home=~$user
+if [[ "$home" = "~$user" ]]; then
+    user=${LOGNAME:=$(logname)}
+    eval home=~$user
 fi
-pershell=$HOME/.bash-pershell
-if [[ ! -f $pershell && -f $BASHRC/USERS/$LOGNAME/pershell ]]; then
-    pershell=$BASHRC/USERS/$LOGNAME/pershell
+topshell=$home/.bash-topshell
+pershell=$home/.bash-pershell
+if [[ ! -f $topshell ]]; then
+    topshell=$HOME/.bash-topshell
+    pershell=$HOME/.bash-pershell
+    if [[ ! -f $topshell && -f $BASHRC/USERS/$user/topshell ]]; then
+        topshell=$BASHRC/USERS/$user/topshell
+        pershell=$BASHRC/USERS/$user/pershell
+    fi
 fi
 
 # These functions can be used in setting up PATH variables.
 source $BASHRC/func/pathfuncs
 
-#####################################################################
-# Exported settings belong in ~/.bash-topshell
-#####################################################################
-if [[ -z "$BASHRC_INIT" || "$*" == *-force* || "$*" == *-login* ]]; then
-    dbgmsg "ENVIRONMENT INITIALIZATION FOR $LOGNAME IN $$ FROM $topshell"
-    source $topshell
-    export BASHRC_INIT=1
-fi
+# May already be provided by /etc/profile but just in case ...
+HOSTNAME=${HOSTNAME:-$(/bin/hostname)}
 
-# Remove redundant entries in these path variables.
-cleanpath PATH MANPATH
+#####################################################################
+# Exported settings belong in ~/.bash-topshell.
+# The BASHRC_INIT EV functions as a flag indicating whether this
+# shell process tree has been initialized post-login. It should
+# cause the block below to be sourced only in the initial
+# "top" (typically login) shell.
+#####################################################################
+if [[ "$BASHRC_INIT" != "$user@$HOSTNAME" ]]; then
+    # Use "source $BASHRC/bash-init -reset" to force an initial PATH setting
+    if [[ "$*" == *-reset* ]]; then
+        echo "$0: RESETTING ENVIRONMENT FOR $user IN $$ FROM $topshell" >&2
+        PATH=/bin:/usr/bin
+        [[ ! -r /etc/profile ]] || source /etc/profile
+    elif [[ "$*" == *-debug* || "$user" != "$LOGNAME" ]]; then
+        echo "$0: ENVIRONMENT INITIALIZATION FOR $user IN $$ FROM $topshell" >&2
+    fi
+    source $topshell
+
+    # Remove redundant entries in these path variables.
+    cleanpath PATH MANPATH
+
+    # Prevent interactive child shells from re-sourcing the topshell file.
+    export BASHRC_INIT="$user@$HOSTNAME"
+fi
 
 #####################################################################
 # Interactive settings belong in ~/.bash-pershell
 #####################################################################
 if [[ "$*" == *-pershell* && -f $pershell ]]; then
-    dbgmsg "ENVIRONMENT INITIALIZATION FOR $LOGNAME IN $$ FROM $pershell"
+    if [[ "$*" == *-debug* || "$user" != "$LOGNAME" ]]; then
+        echo "$0: INTERACTIVE INITIALIZATION FOR $user IN $$ FROM $pershell" >&2
+    fi
     source $pershell
 fi
 
-unset topshell pershell
+unset topshell pershell user home
 
 # Useful for updating active shells after tweaking config files.
 alias pershell='source $BASHRC/USERS/$LOGNAME/pershell'
 alias topshell='source $BASHRC/USERS/$LOGNAME/topshell'
 
 # Debugging aid undo.
-[[ ! -x ~/.bash-verbose ]] || set +x
+[[ -z "${BASH_VERBOSE-}" && ! -x ~/.bash-verbose ]] || set +x
 
 : Ensure $? == 0 when this script ends.
 
 # Keep tabs out since human users can't agree on tabstops.
-# vim: filetype=sh:sw=4:et:
+# This file is marked read-only in vim as a mnemonic to users who should
+# normally not change it. Use a force-write if the change is legitimate.
+# vim: filetype=sh:sw=4:et:tw=80:cc=+1:readonly
