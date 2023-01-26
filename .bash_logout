@@ -19,6 +19,11 @@ if [[ -n "$BASHRC" ]]; then
 	done
 	[[ ! -s $check ]] || echo days=$days > $check
     fi
+
+    # It's unknown who creates these or why but clean them up occasionally.
+    if [[ -d $BASHRC/USERS/$LOGNAME/config/abrt ]]; then
+        find $BASHRC/USERS/$LOGNAME/config/abrt ! -atime -2 -type f -exec rm -f {} +
+    fi
 fi
 
 # Retain shell history data for a while if we're keeping it in memory.

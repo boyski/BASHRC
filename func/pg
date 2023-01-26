@@ -5,9 +5,9 @@
 # is that it preserves the last word of the command line.
 # So if you're in the habit of using "!$" or "ESC-.", you
 # can use "pg command" instead and not lose it. E.g.
-#    % vi foo.c
-#    % pg svn diff !$
-#    % gcc -c !$
+#    $ vi foo.c
+#    $ pg svn diff !$
+#    $ gcc -c !$
 
 function pg {
     if tty -s; then

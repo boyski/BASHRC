@@ -4,7 +4,7 @@
 # Typical usage: "source $BASHRC/func/ps1 && ps1".
 # Or: "source $BASHRC/func/ps1 && ps1 color" for a color-enhanced prompt.
 # The prompt can be switched to "demo mode" via "ps1 demo", and back to
-# regular with "ps1" or "ps1 color".
+# regular mode with "ps1" or "ps1 color". Demo mode is a simplified prompt.
 
 function _ps1_dirs {
     if [[ "${#DIRSTACK[@]}" > 1 ]]; then
@@ -13,7 +13,7 @@ function _ps1_dirs {
     return $1 # preserve original $?
 }
 
-# This is only used for bash versions < 4.0
+# This is not needed by bash versions >= 4.0.
 function _ps1_cwd {
     typeset _trim=${PWD%/*/*/*}
     if [[ "$_trim" == "$PWD" ]]; then
@@ -28,13 +28,13 @@ function _ps1_cwd {
 function _ps1 {
     typeset pc='$'
     if [[ "$BASH_VERSION" == [123]* ]]; then
-        if [[ "$1" == col* ]]; then
+        if [[ "$1" == colo* ]]; then
             echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) \[\033[01;31m\]$?\[\033[00m\] \#'$pc' '
         else
             echo -n '\u@\h $(_ps1_dirs $?)$(_ps1_cwd $?) $? \#'$pc' '
         fi
     else
-        if [[ "$1" == col* ]]; then
+        if [[ "$1" == colo* ]]; then
             echo -n '\u@\h $(_ps1_dirs $?)\w \[\033[01;31m\]$?\[\033[00m\] \#'$pc' '
         else
             echo -n '\u@\h $(_ps1_dirs $?)\w $? \#'$pc' '
