@@ -5,4 +5,6 @@
 
 export EDITOR=vi
 
+: Ensure $? == 0 when this script ends.
+
 # vim: filetype=sh:sw=4:et:

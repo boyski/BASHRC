@@ -1,0 +1,24 @@
+# These are the preferred locale settings for pseudo-users
+# though regular users may use them too. Generally the
+# POSIX/C locale is preferred as the lowest common denominator
+# for a global organization.
+
+# Among other things this tends to keep GNU toolchains
+# from using so-called "smart" (non-ascii) quotes which
+# can cause all sorts of trouble. LC_ALL is the highest
+# precedence locale var and should "win" over all others.
+export LC_ALL=C
+
+# This is a local requirement. Without it bash handles character class
+# ranges like [A-Z] "wrongly" (or suprisingly anyway) under the default
+# locale en_US.UTF-8.  Specifically, underscores sort differently
+# in en_US.UTF-8. The LC_ALL setting tends to make this redundant
+# but LC_COLLATE still documents the preference.
+export LC_COLLATE=C
+
+# GNU ls has a difference in -l format without this.
+export LC_TIME=C
+
+# Overridden by LC_ALL but set anyway to avoid confusion
+# with the RHEL default.
+export LANG=C

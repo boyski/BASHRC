@@ -12,4 +12,6 @@ source $BASHRC/func/ps1 && ps1
 source $BASHRC/func/dirfuncs
 source $BASHRC/func/pg
 
+: Ensure $? == 0 when this script ends.
+
 # vim: filetype=sh:sw=4:et:

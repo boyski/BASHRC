@@ -113,6 +113,6 @@ alias topshell='source $BASHRC/USERS/$LOGNAME/topshell'
 : Ensure $? == 0 when this script ends.
 
 # Keep tabs out since human users can't agree on tabstops.
-# This file is marked read-only in vim as a mnemonic to users who should
-# normally not change it. Use a force-write if the change is legitimate.
+# This file is marked read-only in vim because it usually shouldn't
+# be changed. Use a force-write if the change is legitimate.
 # vim: filetype=sh:sw=4:et:tw=80:cc=+1:readonly
